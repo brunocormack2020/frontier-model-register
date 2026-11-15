@@ -1,0 +1,6 @@
+# Versions exercised in the supplied offline tests; resolve through your approved package repository.
+# This is not a transitive lockfile or a vulnerability attestation.
+httpx==0.28.1
+openpyxl==3.1.5
+PyYAML==6.0.3
+pypdf==6.21.4

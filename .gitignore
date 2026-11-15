@@ -1,0 +1,38 @@
+# Python environments and build outputs
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# Local configuration and credentials
+/config.yaml
+/config.*.yaml
+!/config.example.yaml
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+
+# Operational state, evidence downloads, generated exports and decisions
+/work*/
+/out*/
+/bank_decisions*.json
+/reviewed*.json
+/benchmark_review*.json
+/published_evidence_update*.json
+/company_data/
+/private_data/
+*.log
+
+# Editor, operating-system and spreadsheet temporary files
+.DS_Store
+Thumbs.db
+~$*.xlsx

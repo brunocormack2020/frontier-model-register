@@ -1,0 +1,460 @@
+{
+  "source_url": "https://agentdojo.spylab.ai/results/",
+  "raw_source_sha256": "b77708474163748456aeb7eed545e0ead019a7cfd0bd814c074da85de803ce67",
+  "retrieved_at": "2026-11-14T16:49:48Z",
+  "headers": [
+    "Provider",
+    "Model",
+    "Defense",
+    "Attack",
+    "Utility",
+    "Utility under attack",
+    "Targeted ASR",
+    "Date",
+    "Traces"
+  ],
+  "rows": [
+    {
+      "cells": [
+        "anthropic",
+        "claude-3-7-sonnet-20250219",
+        "None",
+        "important_instructions",
+        "88.66%",
+        "77.27%",
+        "7.31%",
+        "2025-02-24",
+        ""
+      ],
+      "links": []
+    },
+    {
+      "cells": [
+        "google",
+        "gemini-2.0-flash-001",
+        "None",
+        "important_instructions",
+        "43.30%",
+        "39.75%",
+        "20.83%",
+        "2025-01-30",
+        ""
+      ],
+      "links": []
+    },
+    {
+      "cells": [
+        "google",
+        "gemini-2.0-flash-exp",
+        "None",
+        "important_instructions",
+        "46.39%",
+        "39.90%",
+        "17.01%",
+        "2024-12-11",
+        ""
+      ],
+      "links": []
+    },
+    {
+      "cells": [
+        "anthropic",
+        "claude-3-5-sonnet-20241022",
+        "None",
+        "important_instructions",
+        "79.38%",
+        "72.50%",
+        "1.11%",
+        "2024-11-15",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-claude-3-5-sonnet-20241022/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "google",
+        "gemini-1.5-flash-002",
+        "None",
+        "important_instructions",
+        "38.14%",
+        "32.43%",
+        "3.50%",
+        "2024-11-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gemini-1-5-flash-002/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "google",
+        "gemini-1.5-pro-002",
+        "None",
+        "important_instructions",
+        "61.86%",
+        "47.06%",
+        "17.01%",
+        "2024-11-04",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gemini-1-5-pro-002/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-mini-2024-07-18",
+        "None",
+        "important_instructions",
+        "68.04%",
+        "49.92%",
+        "27.19%",
+        "2024-07-19",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-mini-2024-07-18/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "anthropic",
+        "claude-3-5-sonnet-20240620",
+        "None",
+        "important_instructions",
+        "79.38%",
+        "51.19%",
+        "33.86%",
+        "2024-06-20",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-claude-3-5-sonnet-20240620/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "None",
+        "tool_knowledge",
+        "69.07%",
+        "57.71%",
+        "34.50%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "None",
+        "injecagent",
+        "69.07%",
+        "68.52%",
+        "5.72%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "transformers_pi_detector",
+        "important_instructions",
+        "41.24%",
+        "21.14%",
+        "7.95%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13-transformers_pi_detector/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "tool_filter",
+        "important_instructions",
+        "72.16%",
+        "56.28%",
+        "6.84%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13-tool_filter/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "spotlighting_with_delimiting",
+        "important_instructions",
+        "72.16%",
+        "55.64%",
+        "41.65%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13-spotlighting_with_delimiting/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "repeat_user_prompt",
+        "important_instructions",
+        "84.54%",
+        "67.25%",
+        "27.82%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13-repeat_user_prompt/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "None",
+        "important_instructions",
+        "69.07%",
+        "50.08%",
+        "47.69%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "None",
+        "ignore_previous",
+        "69.07%",
+        "66.77%",
+        "5.41%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4o-2024-05-13",
+        "None",
+        "direct",
+        "69.07%",
+        "67.25%",
+        "3.66%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4o-2024-05-13/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4-turbo-2024-04-09",
+        "None",
+        "important_instructions",
+        "64.95%",
+        "54.05%",
+        "28.62%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4-turbo-2024-04-09/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-4-0125-preview",
+        "None",
+        "important_instructions",
+        "65.98%",
+        "40.70%",
+        "56.28%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-4-0125-preview/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "openai",
+        "gpt-3.5-turbo-0125",
+        "None",
+        "important_instructions",
+        "35.05%",
+        "34.66%",
+        "10.33%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gpt-3-5-turbo-0125/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "google",
+        "gemini-1.5-pro-001",
+        "None",
+        "important_instructions",
+        "46.39%",
+        "28.93%",
+        "28.62%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gemini-1-5-pro-001/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "google",
+        "gemini-1.5-flash-001",
+        "None",
+        "important_instructions",
+        "38.14%",
+        "34.18%",
+        "12.24%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-gemini-1-5-flash-001/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "cohere",
+        "command-r-plus",
+        "None",
+        "important_instructions",
+        "24.74%",
+        "25.12%",
+        "4.45%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-command-r-plus/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "cohere",
+        "command-r",
+        "None",
+        "important_instructions",
+        "26.80%",
+        "30.84%",
+        "3.34%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-command-r/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "anthropic",
+        "claude-3-sonnet-20240229",
+        "None",
+        "important_instructions",
+        "53.61%",
+        "33.23%",
+        "26.71%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-claude-3-sonnet-20240229/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "anthropic",
+        "claude-3-opus-20240229",
+        "None",
+        "important_instructions",
+        "68.04%",
+        "52.46%",
+        "11.29%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-claude-3-opus-20240229/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "anthropic",
+        "claude-3-haiku-20240307",
+        "None",
+        "important_instructions",
+        "39.18%",
+        "33.39%",
+        "9.06%",
+        "2024-06-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-claude-3-haiku-20240307/t/1"
+      ]
+    },
+    {
+      "cells": [
+        "together-prompting",
+        "meta-llama/Llama-3-70b-chat-hf",
+        "None",
+        "important_instructions",
+        "34.02%",
+        "18.28%",
+        "25.60%",
+        "2021-09-05",
+        "Explore →"
+      ],
+      "links": [
+        "https://explorer.invariantlabs.ai/u/invariant/agentdojo-meta-llama_Llama-3-70b-chat-hf/t/1"
+      ]
+    }
+  ]
+}

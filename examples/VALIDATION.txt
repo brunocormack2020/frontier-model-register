@@ -1,0 +1,66 @@
+Validation performed: 14 November 2026
+Release: 1.1.0
+
+Runtime: Python 3.12.14
+Direct dependencies: httpx 0.28.1, openpyxl 3.1.5, PyYAML 6.0.3, pypdf 6.21.4
+Offline test suite: 116 passed.
+Run with: python run_tests.py
+
+The supplied workbook and bundled benchmark evidence were initialized and exported
+locally. All 65 original model records (23 current, 42 prior/special) and all 38
+original fields were preserved. The output has six monitoring/provenance columns,
+Source Monitor, Benchmark Coverage, Benchmark Results, AISI Evidence and Benchmark
+Guide. Eight affected worksheet ranges were rendered and visually inspected.
+Coverage line wrapping was adjusted and inspected again. Formula-error inspection
+found no matching error entries. Percentage scores are numeric Excel percentages.
+The examples are the resulting populated first-run views.
+
+Bundled evidence:
+  CyberGym: 28 observations
+  ExploitGym: 69 observations
+  CyberGym-E2E: 50 observations
+  CyberBinGym: 4 observations
+  CVE-Bench: 4 observations
+  Cybench: 27 observations
+  AgentDojo: 75 observations
+  Secure Code Instruct: 10 observations
+  Secure Code Autocomplete: 10 observations
+  CyberSOCEval Malware: 14 observations
+  CyberSOCEval Threat Intelligence: 14 observations
+  Separate AISI cyber-range evidence: 52 findings
+
+These are separate metrics/configurations, not distinct model counts. All 357
+entries begin pending review. Ten have exact disclosed model IDs that match a
+registered model; 347 remain unmapped, although some have name/version suggestions.
+Name/version suggestions do not establish an exact serving checkpoint. Missing
+scores, dates and denominators remain unknown. Coding and SOC scope start disabled;
+their evidence is retained and labeled conditional. Original vendor claims are
+preserved as a seed; the first run does not claim a fresh vendor-source verification.
+
+The conditional seed includes small, cost-bounded Inspect Evals validation subsets,
+not full reproduction of the original benchmarks. Original CyberSOCEval results
+remain separate and carry their denominator discrepancy. AISI values preserve
+scenario, run count, budget and study-specific limitations. Their numerical updates
+use attributed imports; supplementary-source monitoring flags changed documents.
+
+The tests cover source parsing and filtering, configuration-specific identities,
+missing versus zero, provider and mapping boundaries, source integrity, unavailable
+sources, stale/forged reviews, history retention, conditional scope, bank decision
+binding, HTML/Excel injection and existing Confluence publishing behavior. Focused
+in-memory checks also verified raw-source acknowledgments and hashes, rejection,
+stale queue handling and all four coding/SOC HTML combinations. Those checks left
+the operational state unchanged.
+
+Live public benchmark bytes were downloaded with curl through the environment's
+configured proxy and validated with the delivered parsers. HTTPX transport was
+checked with controlled fixtures. The default HTTPX live path was not tested end
+to end because the environment lacks the optional SOCKS dependency. If your company
+uses a SOCKS proxy, install the approved httpx[socks] extra; keep TLS verification
+on and test your network and certificate trust. See README for setup details.
+
+No authenticated provider catalog request, generative model invocation, execution
+of benchmark workloads or live Confluence update was performed. The package can
+generate and publish managed Confluence content; its destination and identity must
+be configured and checked in the company's environment. Publishing defaults to a
+dry run. Local hashes/history are not a tamper-proof audit service. The script does
+not implement the bank's complete policy or autonomously approve models.

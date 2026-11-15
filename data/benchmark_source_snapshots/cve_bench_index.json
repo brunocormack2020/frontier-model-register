@@ -1,0 +1,176 @@
+{
+  "sha": "6f373f3e0fe14307499d45559bf24ca55c951aa8",
+  "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/6f373f3e0fe14307499d45559bf24ca55c951aa8",
+  "tree": [
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c03a454e206367147f318efcf39d81b8057f8d38",
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/c03a454e206367147f318efcf39d81b8057f8d38"
+    },
+    {
+      "path": ".github/workflows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3fc331dc68ce3ae0d0c5cef6d974bc5dc9f6da84",
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/3fc331dc68ce3ae0d0c5cef6d974bc5dc9f6da84"
+    },
+    {
+      "path": ".github/workflows/deploy.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ef43a5d94212c674fd0af8721713a617ee9c4927",
+      "size": 660,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/ef43a5d94212c674fd0af8721713a617ee9c4927"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d5d548546a7e926bcac1129943a2078f935b04f5",
+      "size": 52,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/d5d548546a7e926bcac1129943a2078f935b04f5"
+    },
+    {
+      "path": "CLAUDE.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "851ae59ae5b8abd75e55353d2d965e05b0bf3d44",
+      "size": 2352,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/851ae59ae5b8abd75e55353d2d965e05b0bf3d44"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "86035c148ddcfb0f07cdcb7f20974c2ff35e45dd",
+      "size": 1290,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/86035c148ddcfb0f07cdcb7f20974c2ff35e45dd"
+    },
+    {
+      "path": "bun.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "59497add6910f934cfdd7a83e0ced7517810dc4f",
+      "size": 764,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/59497add6910f934cfdd7a83e0ced7517810dc4f"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e98e2b1101dbf6390f10c09b99836bce1a0b3423",
+      "size": 419,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/e98e2b1101dbf6390f10c09b99836bce1a0b3423"
+    },
+    {
+      "path": "runs",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e1fa9375515d6046ed6a08f844595b0204186570",
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/e1fa9375515d6046ed6a08f844595b0204186570"
+    },
+    {
+      "path": "runs/20250321_t-agent_gpt4o",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4dc15f9918e3e6b56464e3844f873671a033078a",
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/4dc15f9918e3e6b56464e3844f873671a033078a"
+    },
+    {
+      "path": "runs/20250321_t-agent_gpt4o/metadata.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0bb92142fa8ce512a55d71f836abd70aecf1029",
+      "size": 596,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/c0bb92142fa8ce512a55d71f836abd70aecf1029"
+    },
+    {
+      "path": "runs/20260411_cvebench_claude-opus-4-6",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a0e48d4650febc7549e9644f8e14d0d156b79176",
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/a0e48d4650febc7549e9644f8e14d0d156b79176"
+    },
+    {
+      "path": "runs/20260411_cvebench_claude-opus-4-6/metadata.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "853727b2884fdf2d262c9c6c2fad43bf601f44ed",
+      "size": 659,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/853727b2884fdf2d262c9c6c2fad43bf601f44ed"
+    },
+    {
+      "path": "scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "95d83ce592a219edf3f48f1b5d4e840de197dd17",
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/95d83ce592a219edf3f48f1b5d4e840de197dd17"
+    },
+    {
+      "path": "scripts/build-leaderboard.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0ec0219053aeb3f966b220dcccb1e5c12cb1764",
+      "size": 1923,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/c0ec0219053aeb3f966b220dcccb1e5c12cb1764"
+    },
+    {
+      "path": "src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8bc3e4f34c1a0d3510e50897ca0eb7dc422e6be7",
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/trees/8bc3e4f34c1a0d3510e50897ca0eb7dc422e6be7"
+    },
+    {
+      "path": "src/CNAME",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6880c97b45f02094f351c6beab14babb1bf8a1b6",
+      "size": 12,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/6880c97b45f02094f351c6beab14babb1bf8a1b6"
+    },
+    {
+      "path": "src/app.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "776fa36474fd84214b51d7cd40f8efe7df57e180",
+      "size": 4030,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/776fa36474fd84214b51d7cd40f8efe7df57e180"
+    },
+    {
+      "path": "src/contact.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c5abc18385138fbe987d07b06a4a6183805408ef",
+      "size": 2923,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/c5abc18385138fbe987d07b06a4a6183805408ef"
+    },
+    {
+      "path": "src/index.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0665a86484d4fbbce43bf8a07193f5248ff27815",
+      "size": 4421,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/0665a86484d4fbbce43bf8a07193f5248ff27815"
+    },
+    {
+      "path": "src/styles.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64c9eaa41a6af0f2b189987928584c669a76c237",
+      "size": 5091,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/64c9eaa41a6af0f2b189987928584c669a76c237"
+    },
+    {
+      "path": "tsconfig.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "89e5a0c6e27772acfe466fac1a50795f8de7ab24",
+      "size": 241,
+      "url": "https://api.github.com/repos/uiuc-kang-lab/cvebench.com/git/blobs/89e5a0c6e27772acfe466fac1a50795f8de7ab24"
+    }
+  ],
+  "truncated": false
+}

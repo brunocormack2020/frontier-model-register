@@ -1,0 +1,47 @@
+{
+  "instances": {
+    "total": 100,
+    "projects": 53
+  },
+  "results": [
+    {
+      "model": "GPT-5.6 Sol",
+      "agent": "Codex",
+      "source": "CyberBinGym Team",
+      "date": "2026-10",
+      "poc": 88.0,
+      "exploit": 20.0,
+      "cost": 28.11,
+      "time_h": 2.13,
+      "llm_calls": 286.2,
+      "tool_calls": 283.4,
+      "focus": "model"
+    },
+    {
+      "model": "Claude Opus 5",
+      "agent": "Claude Code",
+      "source": "CyberBinGym Team",
+      "date": "2026-10",
+      "poc": 85.0,
+      "exploit": 6.0,
+      "cost": 14.9,
+      "time_h": 1.26,
+      "llm_calls": 115.8,
+      "tool_calls": 131.2,
+      "focus": "model"
+    },
+    {
+      "model": "Kimi K3",
+      "agent": "Kimi Code",
+      "source": "CyberBinGym Team",
+      "date": "2026-10",
+      "poc": 64.0,
+      "exploit": 0.0,
+      "cost": 38.34,
+      "time_h": 5.8,
+      "llm_calls": 486.5,
+      "tool_calls": 503.3,
+      "focus": "model"
+    }
+  ]
+}

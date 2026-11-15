@@ -1,0 +1,31 @@
+# Illustrative company pipeline. Use your approved self-hosted agent, persistent state,
+# preinstalled/scanned virtual environment and secret-variable group.
+# No Confluence write is performed by this example.
+trigger: none
+pr: none
+schedules:
+  - cron: '0 12 * * 1'
+    displayName: Weekly evidence refresh at 12:00 UTC
+    branches:
+      include: [main]
+    always: true
+pool:
+  name: YourApprovedSelfHostedPool
+variables:
+  FrontierPython: /opt/bank-frontier-register/.venv/bin/python
+  FrontierConfigPath: /srv/bank-frontier-register/config.yaml
+steps:
+  - checkout: self
+  - bash: |
+      set +e
+      "$(FrontierPython)" run_register.py --config "$(FrontierConfigPath)" refresh
+      frontier_exit=$?
+      if [ "$frontier_exit" -eq 2 ]; then
+        echo "##vso[task.logissue type=warning]Source checks were incomplete. Review the register's monitoring output."
+        exit 0
+      fi
+      exit "$frontier_exit"
+    displayName: Collect evidence and export register
+# Add a separate approved publication stage if your process permits automatic writes.
+# The config file resolves work/output paths relative to its own persistent directory.
+# Azure cron schedules use UTC. 12:00 UTC is 07:00 EST / 08:00 EDT in Ontario.
