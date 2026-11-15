@@ -1,4 +1,4 @@
-# Bank frontier model register automation — v1.1
+# Bank frontier model register automation — v1.1.1
 
 ## Start here
 
@@ -6,6 +6,8 @@
 - **Browser-readable example:** [examples/first_run_register_preview.html](examples/first_run_register_preview.html). Download and open it locally.
 - **Python entry point:** [run_register.py](run_register.py). Installation and refresh instructions follow below.
 - **Private GitHub setup:** [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
+
+Version 1.1.1 fixes the **Benchmark Coverage** worksheet: populated cells now show published values, metrics, test settings and mapping/review status, with links to the detailed evidence. Version 1.1.0 showed counts and status messages only. Regenerate an existing register with `export` after updating the code; do not run `init` again.
 
 The workbook in `data/` is the original initialization input. The populated example in `examples/` contains the added benchmark worksheets. Example results are a dated snapshot and all imported benchmark evidence remains pending review.
 
@@ -73,6 +75,19 @@ The first export explicitly says vendor sources have not been checked by this au
 Paths in `config.yaml` are relative to the configuration file's directory. Place the configuration and `work_dir` on company-managed persistent storage when using a scheduler. Keep a single active writer. The local file lock is intended for one machine; use your scheduler's exclusive-job control or a database/distributed lock for multiple workers.
 
 **After initialization, edit through review and bank-update commands.** Direct changes to an exported Excel file are not silently imported on the next run. This prevents two conflicting sources of truth. To begin with a separately edited workbook, use a new `work_dir` and import it deliberately.
+
+### Upgrade v1.1.0 to v1.1.1
+
+Close the generated workbook in Excel, update the project code, and retain your existing `config.yaml` and complete `work/` directory. The coverage-only patch contains `src/frontier_register/benchmark_views.py`, `src/frontier_register/__init__.py`, and `pyproject.toml`; it does not contain configuration, state, evidence seeds or bank decisions. No dependency change or state migration is required.
+
+From your existing project directory in PowerShell, regenerate the workbook:
+
+```powershell
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml export
+Start-Process .\out\model_register.xlsx
+```
+
+The export reads your current state. It does not accept evidence, change a model mapping, enable conditional scope or collect new scores. The counts in `status` should be unchanged. See **Read the new outputs** below for the meaning of the score previews.
 
 ### Upgrade an existing v1 register
 
@@ -296,13 +311,19 @@ Stale review files are rejected. Accepted results do not change bank fields. A c
 
 | Output | Purpose |
 |---|---|
-| `Benchmark Coverage` | One registered model per row, with separate coverage status for every benchmark and AISI. |
+| `Benchmark Coverage` | One register entry per row, with published score previews, metrics, test settings, mapping/review status and links to detailed benchmark/AISI evidence. |
 | `Benchmark Results` | One metric/configuration per row, with numerical score, unit, denominator, conditions, provenance and review/mapping status. |
 | `AISI Evidence` | Scenario-specific progress and success findings, kept outside ordinary benchmark score tables. |
 | `Benchmark Guide` | Definitions, metric direction, selected scope, comparison limits and source links. |
 | Main register's `Benchmark Coverage` / `Benchmark Evidence Review` columns | Compact summaries that point to the detailed evidence and required review. |
 
-`No linked published result`, `name/version matches; mapping unconfirmed`, `source unavailable` and `conditional — scope not enabled` describe different situations. None means a score of zero. A published zero is stored only when the source actually reports one. The JSON state retains complete observations and history; Excel and Confluence are generated views of that state.
+Each populated Coverage cell shows up to three observations in a deterministic preview, keeping each metric and configuration separate. When more are available, the cell states how many are shown. Click the cell to open its first displayed detail row; use the reported model and benchmark filters on the detail sheet to inspect all observations. The preview is not a maximum, average, ranking or combined cyber score. Percentage, fraction and count units remain distinct; approximate published counts retain that qualifier. Numeric source values remain sortable in `Benchmark Results` and `AISI Evidence`.
+
+**Exact-ID links and unconfirmed name/version suggestions are labeled separately.** Showing a candidate's published value does not assign it to the registered model or accept it as bank evidence. Reviewed labels still do not establish an exact serving checkpoint. Rejected observations are excluded from coverage previews; pending reviews, changed sources and unavailable sources remain visible. Retained coding/SOC results are shown as **Scope off; reference only** when those tracks are disabled. AISI previews retain their scenario and metric rather than producing a universal AISI score.
+
+`No linked published result` and unavailable-source messages describe coverage gaps, not zero scores. A published zero is displayed only when the source actually reports one. The JSON state retains complete observations and history; Excel and Confluence are generated views of that state. Coverage cells are generated by Python during `export` or `refresh`; editing a score directly in Excel does not update the register or recalculate these summaries.
+
+Some original prior/special inventory entries group several model IDs in one field. This display fix preserves those entries and the existing conservative matching rules; it does not distribute one member's score across the entire group. A result without an exact link or an existing name/version suggestion remains in the detail sheet pending an explicit mapping to an appropriate individual model record.
 
 ## 6. Record the bank decision separately
 

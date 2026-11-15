@@ -1,19 +1,35 @@
-Validation performed: 14 November 2026
-Release: 1.1.0
+Validation performed: 15 November 2026
+Release: 1.1.1
 
 Runtime: Python 3.12.14
 Direct dependencies: httpx 0.28.1, openpyxl 3.1.5, PyYAML 6.0.3, pypdf 6.21.4
-Offline test suite: 116 passed.
+Offline test suite: 132 passed (116 existing tests plus 16 coverage-score regressions).
 Run with: python run_tests.py
 
 The supplied workbook and bundled benchmark evidence were initialized and exported
 locally. All 65 original model records (23 current, 42 prior/special) and all 38
 original fields were preserved. The output has six monitoring/provenance columns,
 Source Monitor, Benchmark Coverage, Benchmark Results, AISI Evidence and Benchmark
-Guide. Eight affected worksheet ranges were rendered and visually inspected.
-Coverage line wrapping was adjusted and inspected again. Formula-error inspection
-found no matching error entries. Percentage scores are numeric Excel percentages.
-The examples are the resulting populated first-run views.
+Guide. For this patch, four affected Benchmark Coverage ranges were rendered and
+visually inspected against the original layout. Score previews, status labels,
+longer three-observation previews, and internal-link hints fit without clipping.
+The other eight worksheets were compared with the previous export: cell values,
+data types, number formats, fonts, fills, alignment, links, validations and frozen
+panes were unchanged. No Excel error cells were found. Percentage scores remain
+numeric Excel percentages in the detail table. The examples are populated views
+of the same seeded register; no new public-source retrieval is implied.
+
+The coverage display now has 44 populated model/benchmark cells: 32 active cells
+and 12 conditional reference cells. Each shows up to three metric/configuration
+observations, with a disclosure when more are available. Nine independent sample
+checks confirmed exact-linked and unconfirmed-model scores, settings, review
+status, scope-off labels and approximate-count qualifiers. Every populated preview
+has an internal link to a nonempty detail row. Native Microsoft Excel interaction
+was not executed in this Linux environment.
+
+An existing-state export completed successfully and left work/register.json
+byte-for-byte unchanged. All mappings, review states, conditional scope and bank
+decisions are preserved. The v1.1.1 patch requires export, not init or seed reimport.
 
 Bundled evidence:
   CyberGym: 28 observations
@@ -51,7 +67,8 @@ in-memory checks also verified raw-source acknowledgments and hashes, rejection,
 stale queue handling and all four coding/SOC HTML combinations. Those checks left
 the operational state unchanged.
 
-Live public benchmark bytes were downloaded with curl through the environment's
+The original 1.1.0 collection used the following transport checks; this display
+patch did not fetch fresh public evidence. Live public benchmark bytes were downloaded with curl through the environment's
 configured proxy and validated with the delivered parsers. HTTPX transport was
 checked with controlled fixtures. The default HTTPX live path was not tested end
 to end because the environment lacks the optional SOCKS dependency. If your company
