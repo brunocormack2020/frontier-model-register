@@ -1,4 +1,4 @@
-# Bank frontier model register automation — v1.1.1
+# Frontier model register automation — v1.1.1
 
 ## Start here
 
