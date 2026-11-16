@@ -11538,7 +11538,7 @@
   "notes": [
     "Actual published numerical results; not a new execution of any benchmark.",
     "Only Anthropic, OpenAI and Google single-model results included. Hidden rows and multi-model ensembles excluded.",
-    "A source check confirms publication, not bank approval or comparability. Exact model mappings and bank decisions remain review steps.",
+    "A source check confirms publication, not organization approval or comparability. Exact model mappings and organization decisions remain review steps.",
     "The original AgentDojo HTML article is not packaged. Its factual table is preserved with a separate extraction hash and the original source hash."
   ]
 }

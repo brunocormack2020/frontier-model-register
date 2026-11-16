@@ -12,7 +12,7 @@ import yaml
 
 from .core import (StateLock, RegisterError, HEADERS, PROVIDERS, atomic_json, read_json,
                    import_workbook, load_state, save_state, collect_source_catalog, apply_fetch_results,
-                   make_review_queue, apply_review, apply_bank_decisions, merge_discovery,
+                   make_review_queue, apply_review, apply_organization_decisions, merge_discovery,
                    audit, digest, monitoring, utc_now)
 from .collectors import fetch_sources, discover_models, CollectionError, DiscoveryError
 from .render import export_excel, export_html, confluence_fragment
@@ -70,7 +70,7 @@ def _render(state: dict, cfg: dict) -> dict:
 
 
 def parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Maintain vendor evidence and bank decisions for a frontier model register.")
+    p = argparse.ArgumentParser(description="Maintain vendor evidence and organization decisions for a frontier model register.")
     p.add_argument("--config", type=Path, default=Path("config.yaml"), help="YAML configuration; paths are relative to its directory")
     sub = p.add_subparsers(dest="command", required=True)
     init = sub.add_parser("init", help="Import the supplied workbook once; refuses to overwrite existing state")
@@ -84,15 +84,15 @@ def parser() -> argparse.ArgumentParser:
     sub.add_parser("export", help="Regenerate Excel, JSON and Confluence HTML without network access")
     sub.add_parser("status", help="Print record and source status counts")
     sources = sub.add_parser("sources", help="List configured source identifiers and URLs")
-    review = sub.add_parser("apply-review", help="Apply attributed vendor review; bank fields cannot be changed")
+    review = sub.add_parser("apply-review", help="Apply attributed vendor review; organization fields cannot be changed")
     review.add_argument("--file", type=Path, required=True)
     review.add_argument("--reviewer", required=True)
-    bank_template = sub.add_parser("bank-template", help="Create a bank-decision request bound to the current state")
-    bank_template.add_argument("--record-id", action="append", required=True)
-    bank_template.add_argument("--output", type=Path, required=True)
-    bank = sub.add_parser("bank-update", help="Explicitly record bank decisions or administrative deployment changes")
-    bank.add_argument("--file", type=Path, required=True)
-    bank.add_argument("--actor", required=True)
+    organization_template = sub.add_parser("organization-template", help="Create a organization-decision request bound to the current state")
+    organization_template.add_argument("--record-id", action="append", required=True)
+    organization_template.add_argument("--output", type=Path, required=True)
+    organization = sub.add_parser("organization-update", help="Explicitly record organization decisions or administrative deployment changes")
+    organization.add_argument("--file", type=Path, required=True)
+    organization.add_argument("--actor", required=True)
     add = sub.add_parser("add-model", help="Register a vendor model manually when API catalog access is unavailable")
     add.add_argument("--provider", choices=PROVIDERS, required=True)
     add.add_argument("--model-id", required=True)
@@ -101,7 +101,7 @@ def parser() -> argparse.ArgumentParser:
     bi = sub.add_parser("benchmark-import", help="Import attributed published results and AISI evidence as pending review")
     bi.add_argument("--file",type=Path,required=True)
     bi.add_argument("--actor",default="operator")
-    br = sub.add_parser("benchmark-review", help="Review results and explicit model mappings without changing bank decisions")
+    br = sub.add_parser("benchmark-review", help="Review results and explicit model mappings without changing organization decisions")
     br.add_argument("--file",type=Path,required=True)
     br.add_argument("--reviewer",required=True)
     bs = sub.add_parser("benchmark-scope", help="Select conditional coding/SOC evidence for this register")
@@ -203,7 +203,7 @@ def main(argv: list[str] | None = None) -> int:
             if args.command == "apply-review":
                 state = apply_review(state, read_json(args.file), args.reviewer)
                 _catalog(state, cfg)
-            elif args.command == "bank-template":
+            elif args.command == "organization-template":
                 by_id = {r["record_id"]:r for r in state["records"]}
                 if set(args.record_id) - set(by_id):
                     raise RegisterError("Unknown record ID.")
@@ -213,8 +213,8 @@ def main(argv: list[str] | None = None) -> int:
                 } for rid in args.record_id]})
                 print(f"Wrote {args.output}")
                 return 0
-            elif args.command == "bank-update":
-                state = apply_bank_decisions(state, read_json(args.file), args.actor)
+            elif args.command == "organization-update":
+                state = apply_organization_decisions(state, read_json(args.file), args.actor)
             elif args.command == "add-model":
                 settings = cfg.get("discovery",{}).get(args.provider,{})
                 model = {"provider":args.provider,"model_id":args.model_id,"display_name":args.display_name or args.model_id,

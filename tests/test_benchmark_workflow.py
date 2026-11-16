@@ -1,4 +1,4 @@
-"""Independent invariants for published benchmark evidence and bank decisions."""
+"""Independent invariants for published benchmark evidence and organization decisions."""
 from __future__ import annotations
 
 import copy
@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from frontier_register import benchmarks as b
 from frontier_register.core import (
-    BANK_FIELDS, VENDOR_FIELDS, HEADERS, RegisterError, apply_bank_decisions,
+    ORGANIZATION_FIELDS, VENDOR_FIELDS, HEADERS, RegisterError, apply_organization_decisions,
     digest, fields_for, import_workbook, monitoring, record_id,
 )
 
@@ -23,14 +23,14 @@ def fixture_state() -> dict:
                    "Model Family": "Gemini Test", "Version": "001",
                    "Native Cyber Finding": "Previously recorded finding",
                    "Original Suggested Treatment": "Original note"})
-    bank = {key: None for key in BANK_FIELDS}
-    bank.update({"Bank Classification": "Pending classification",
-                 "Bank Frontier Determination": "Not determined"})
+    organization = {key: None for key in ORGANIZATION_FIELDS}
+    organization.update({"Organization Classification": "Pending classification",
+                 "Organization Frontier Determination": "Not determined"})
     return {"schema_version": 1, "state_version": 0, "created_at": "2026-11-14T00:00:00Z",
             "updated_at": "2026-11-14T00:00:00Z", "audit": [], "sources": {},
             "source_checks": {}, "discovery_runs": [], "records": [{
                 "record_id": record_id("Google", "gemini-test-001"), "sheet": "Model Register",
-                "deployment_key": "unassigned", "vendor": vendor, "bank": bank,
+                "deployment_key": "unassigned", "vendor": vendor, "organization": organization,
                 "metadata": {"origin": "workbook_import", "reviewed_source_hashes": {},
                              "pending_sources": [], "discovery_review_required": False,
                              "decision_vendor_sha256": None}}]}
@@ -68,18 +68,18 @@ def accept_pending(state: dict, **item_changes) -> dict:
     return b.apply_benchmark_review(state, queue, "Evidence reviewer")
 
 
-def confirm_bank_decision(state: dict) -> dict:
+def confirm_organization_decision(state: dict) -> dict:
     record = state["records"][0]
     request = {"state_sha256": digest(state), "items": [{
         "record_id": record["record_id"], "confirm_decision": True,
         "expected_vendor_sha256": digest(record["vendor"]),
         "expected_benchmark_sha256": b.evidence_digest(record, state),
-        "updates": {"Bank Classification": "Eligible for assessment",
-                    "Bank Frontier Determination": "Outside exclusion",
-                    "Bank Rationale / Open Decision": "Documented evidence assessed under the bank definition.",
+        "updates": {"Organization Classification": "Eligible for assessment",
+                    "Organization Frontier Determination": "Outside exclusion",
+                    "Organization Rationale / Open Decision": "Documented evidence assessed under the organization definition.",
                     "Decision Owner": "Model committee", "Decision Date": "2026-11-14",
                     "Approval Record": "DEC-BENCH-001"}}]}
-    return apply_bank_decisions(state, request, "Decision owner")
+    return apply_organization_decisions(state, request, "Decision owner")
 
 
 class BenchmarkMigrationAndMapping(unittest.TestCase):
@@ -94,7 +94,7 @@ class BenchmarkMigrationAndMapping(unittest.TestCase):
         self.assertEqual({"coding": False, "soc": False}, state["benchmarks"]["scope"])
         self.assertEqual(7, len(b.CORE))
 
-    def test_new_exact_identifier_result_is_pending_without_changing_bank(self):
+    def test_new_exact_identifier_result_is_pending_without_changing_organization(self):
         state = fixture_state()
         records = copy.deepcopy(state["records"])
         result = b.merge_observations(state, [observation()])
@@ -211,7 +211,7 @@ class BenchmarkEvidenceTransactions(unittest.TestCase):
         self.assertEqual(before, state)
 
     def test_forged_content_or_published_value_cannot_be_reviewed(self):
-        for mutation in ("hash", "value", "bank"):
+        for mutation in ("hash", "value", "organization"):
             with self.subTest(mutation=mutation):
                 state = fixture_state()
                 b.merge_observations(state, [observation()])
@@ -224,7 +224,7 @@ class BenchmarkEvidenceTransactions(unittest.TestCase):
                     item["published_result"]["value"] = 1.0
                     # The generated queue must not provide an alias into state.
                 else:
-                    item["Bank Classification"] = "Eligible for assessment"
+                    item["Organization Classification"] = "Eligible for assessment"
                 before = copy.deepcopy(state)
                 with self.assertRaises(RegisterError):
                     b.apply_benchmark_review(state, queue, "Reviewer")
@@ -321,23 +321,23 @@ class BenchmarkScopeAndDecisions(unittest.TestCase):
         self.assertEqual(9.8, entry["data"]["value"])
         self.assertFalse(entry["data"]["active_defenders"])
 
-    def test_bank_decision_binding_survives_refresh_and_requires_reassessment(self):
+    def test_organization_decision_binding_survives_refresh_and_requires_reassessment(self):
         state = fixture_state()
         b.merge_observations(state, [observation()])
         state = accept_pending(state)
-        state = confirm_bank_decision(state)
+        state = confirm_organization_decision(state)
         record = state["records"][0]
-        prior_bank = copy.deepcopy(record["bank"])
+        prior_organization = copy.deepcopy(record["organization"])
         binding = record["metadata"].get("decision_benchmark_sha256")
         self.assertEqual(b.evidence_digest(record, state), binding)
         b.merge_observations(state, [observation(value=80.0, successes=8)])
-        self.assertEqual(prior_bank, state["records"][0]["bank"])
+        self.assertEqual(prior_organization, state["records"][0]["organization"])
         self.assertIn("benchmark", monitoring(state["records"][0], state)[0].lower())
         state = accept_pending(state)
         self.assertIn("benchmark reassessment", b.monitoring(state["records"][0], state))
         request = {"state_sha256": digest(state), "items": [{"record_id": state["records"][0]["record_id"],
                    "updates": {"Next Review Date": "2026-12-01"}}]}
-        state = apply_bank_decisions(state, request, "Administrator")
+        state = apply_organization_decisions(state, request, "Administrator")
         self.assertEqual(binding, state["records"][0]["metadata"]["decision_benchmark_sha256"])
         self.assertIn("benchmark reassessment", b.monitoring(state["records"][0], state))
 
@@ -380,7 +380,7 @@ class BenchmarkWorkbookPreservation(unittest.TestCase):
         from frontier_register.render import export_excel
         from openpyxl import load_workbook
 
-        seed = Path(__file__).resolve().parents[1] / "data" / "Bank_Frontier_Model_Register_2026-11-14.xlsx"
+        seed = Path(__file__).resolve().parents[1] / "data" / "Organization_Frontier_Model_Register_2026-11-14.xlsx"
         state = import_workbook(seed)
         formula_like = '=HYPERLINK("https://example.invalid","source label")'
         b.merge_observations(state, [observation(reported_model=formula_like, model_id=None)])
@@ -399,7 +399,7 @@ class BenchmarkWorkbookPreservation(unittest.TestCase):
         from frontier_register.render import export_excel
         from openpyxl import load_workbook
 
-        seed = Path(__file__).resolve().parents[1] / "data" / "Bank_Frontier_Model_Register_2026-11-14.xlsx"
+        seed = Path(__file__).resolve().parents[1] / "data" / "Organization_Frontier_Model_Register_2026-11-14.xlsx"
         state = import_workbook(seed)
         original = {r["record_id"]: copy.deepcopy(fields_for(r)) for r in state["records"]}
         first = state["records"][0]

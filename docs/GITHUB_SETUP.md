@@ -58,7 +58,7 @@ If the repository name already exists, stop and inspect it before choosing a dif
 
 ## Find the populated workbook
 
-Open `examples/first_run_model_register.xlsx`. The **Benchmark Results** worksheet contains the published benchmark observations; **AISI Evidence** contains the separate cyber-range findings. `data/Bank_Frontier_Model_Register_2026-11-14.xlsx` is the original input workbook.
+Open `examples/first_run_model_register.xlsx`. The **Benchmark Results** worksheet contains the published benchmark observations; **AISI Evidence** contains the separate cyber-range findings. `data/Organization_Frontier_Model_Register_2026-11-14.xlsx` is the original input workbook.
 
 ## Keep operational files outside version control
 

@@ -33,7 +33,7 @@ class CoverageScorePreviews(unittest.TestCase):
         self.assertEqual("'Benchmark Results'!A5", result["location"])
         self.assertEqual(before, state)
 
-    def test_candidate_score_never_becomes_a_mapping_or_bank_evidence(self):
+    def test_candidate_score_never_becomes_a_mapping_or_organization_evidence(self):
         state = fixture_state()
         b.merge_observations(state, [observation(model_id=None)])
         before = digest(state)
@@ -202,7 +202,7 @@ class CoverageWorkbookRoundTrip(unittest.TestCase):
         from openpyxl import load_workbook
         from frontier_register.render import export_excel
 
-        template = ROOT / "data/Bank_Frontier_Model_Register_2026-11-14.xlsx"
+        template = ROOT / "data/Organization_Frontier_Model_Register_2026-11-14.xlsx"
         state = import_workbook(template)
         for name in ("benchmark_results_seed.json", "benchmark_evidence_seed.json"):
             b.import_evidence(state, json.loads((ROOT / "data" / name).read_text()), "Bundled evidence")

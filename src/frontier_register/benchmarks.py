@@ -1,6 +1,6 @@
 """Published benchmark observations, explicit model mapping and evidence review.
 
-No benchmark is executed here. Scores never become bank classifications.
+No benchmark is executed here. Scores never become organization classifications.
 """
 from __future__ import annotations
 
@@ -252,7 +252,7 @@ def apply_benchmark_review(state: dict, queue: dict, reviewer: str) -> dict:
             raise RegisterError("Benchmark acceptance/rejection requires a review_note.")
         allowed = {"kind","observation_id","expected_content_sha256","action","record_id","mapping_basis","review_note","published_result","candidate_records","source_sha256","raw_evidence_reviewed","source_watch"}
         if set(item) - allowed or ("published_result" in item and item["published_result"] != entry["data"]):
-            raise RegisterError("Review cannot change published values or introduce bank fields.")
+            raise RegisterError("Review cannot change published values or introduce organization fields.")
         rid = item.get("record_id")
         basis = str(item.get("mapping_basis") or "").strip()
         if rid is not None:
@@ -299,8 +299,8 @@ def monitoring(record: dict, state: dict) -> str:
     if any(c.get("status") in ("unavailable","error","parse_error") and c.get("benchmark_id") in bids for c in state["benchmarks"].get("source_checks",{}).values()):
         messages.append("Benchmark source unavailable: retained results may be stale")
     bound = record["metadata"].get("decision_benchmark_sha256")
-    if record["bank"]["Bank Classification"] != "Pending classification" and ((bound is not None and bound != evidence_digest(record,state)) or (bound is None and entries)):
-        messages.append("Bank decision requires benchmark reassessment")
+    if record["organization"]["Organization Classification"] != "Pending classification" and ((bound is not None and bound != evidence_digest(record,state)) or (bound is None and entries)):
+        messages.append("Organization decision requires benchmark reassessment")
     return "; ".join(messages)
 
 

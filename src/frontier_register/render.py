@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 
 from .core import HEADERS, DATE_FIELDS, SHEETS, fields_for, monitoring, digest
 
-EXTRA_HEADERS = ["Evidence Monitoring Status", "Last Source Check UTC", "Record ID", "Bank Decision Evidence Version", "Benchmark Coverage", "Benchmark Evidence Review"]
+EXTRA_HEADERS = ["Evidence Monitoring Status", "Last Source Check UTC", "Record ID", "Organization Decision Evidence Version", "Benchmark Coverage", "Benchmark Evidence Review"]
 
 
 def _excel_value(value, header):
@@ -83,14 +83,14 @@ def export_excel(state: dict, template: Path, destination: Path) -> None:
         table.tableColumns = [TableColumn(id=i, name=h) for i, h in enumerate(full_headers, 1)]
         if table.autoFilter:
             table.autoFilter.ref = table.ref
-        # Existing template contains only the two supported bank dropdowns.
+        # Existing template contains only the two supported organization dropdowns.
         ws.data_validations.dataValidation = []
         for column, options in (("I", "Pending classification,Restricted,Eligible for assessment"),
                                 ("AB", "Not determined,Within exclusion,Outside exclusion")):
             dv = DataValidation(type="list", formula1=f'"{options}"', allow_blank=False)
             ws.add_data_validation(dv)
             dv.add(f"{column}5:{column}{len(records)+4}")
-        _write_cell(ws["A3"], f"State version {state['state_version']}. Updated {state['updated_at']}. Evidence monitoring is separate from the bank decision.")
+        _write_cell(ws["A3"], f"State version {state['state_version']}. Updated {state['updated_at']}. Evidence monitoring is separate from the organization decision.")
 
     if "Source Monitor" in wb.sheetnames:
         del wb["Source Monitor"]
@@ -142,13 +142,13 @@ def export_excel(state: dict, template: Path, destination: Path) -> None:
         guide = wb["Field Guide"]
         extra = [
             ["Automation fields", "Source / Owner", "Meaning"],
-            [EXTRA_HEADERS[0], "Automation", "Source changes, collection failures and decision-to-evidence drift are shown separately from bank classification."],
+            [EXTRA_HEADERS[0], "Automation", "Source changes, collection failures and decision-to-evidence drift are shown separately from organization classification."],
             [EXTRA_HEADERS[1], "Automation", "Latest attempted check, including failures. See Source Monitor for last success."],
-            [EXTRA_HEADERS[2], "System identity", "Stable provider / exact-model / deployment key. Use it in review and bank-decision files."],
-            [EXTRA_HEADERS[3], "Decision provenance", "Hash of vendor evidence fields at the recorded bank decision. A later difference triggers reassessment."],
+            [EXTRA_HEADERS[2], "System identity", "Stable provider / exact-model / deployment key. Use it in review and organization-decision files."],
+            [EXTRA_HEADERS[3], "Decision provenance", "Hash of vendor evidence fields at the recorded organization decision. A later difference triggers reassessment."],
             [EXTRA_HEADERS[4], "Published benchmark evidence", "Linked results are separate observations. See Benchmark Coverage for exact-ID joins, name/version suggestions and missing results."],
-            [EXTRA_HEADERS[5], "Benchmark review", "New or corrected evidence requires review. Bank decisions additionally bind to the reviewed benchmark evidence and conditional scope."],
-            ["Editing rule", "Operating process", "JSON state is the source of truth after initialization. Apply review or bank-decision files; direct Excel edits are not automatically re-imported."],
+            [EXTRA_HEADERS[5], "Benchmark review", "New or corrected evidence requires review. Organization decisions additionally bind to the reviewed benchmark evidence and conditional scope."],
+            ["Editing rule", "Operating process", "JSON state is the source of truth after initialization. Apply review or organization-decision files; direct Excel edits are not automatically re-imported."],
         ]
         for row_index, vals in enumerate(extra, 65):
             for col_index, val in enumerate(vals, 1):
@@ -190,7 +190,7 @@ def confluence_fragment(state: dict, include_prior: bool = True) -> str:
     prior = [r for r in state["records"] if r["sheet"] == "Prior and Special"]
     parts = ["<h1>Frontier model register</h1>",
              f"<p>State version {state['state_version']}. Updated {escape(state['updated_at'])}. {len(current)} current model records.</p>",
-             "<p><strong>Vendor evidence and bank decisions are separate.</strong> Pending classification is not permission to onboard. Source changes and failures are shown alongside retained findings.</p>"]
+             "<p><strong>Vendor evidence and organization decisions are separate.</strong> Pending classification is not permission to onboard. Source changes and failures are shown alongside retained findings.</p>"]
     for provider in ("Anthropic", "OpenAI", "Google"):
         rows = []
         for record in current:
@@ -198,8 +198,8 @@ def confluence_fragment(state: dict, include_prior: bool = True) -> str:
             if f["Provider"] != provider:
                 continue
             rows.append([f["Model Family"], f["Version"], f["Exact Model ID"], f["Native Cyber Finding"],
-                         f["Evidence Basis"], f["Bank Classification"], f["Bank Frontier Determination"], monitoring(record, state)[0]])
-        parts.extend([f"<h2>{provider}</h2>", _table(["Model", "Version", "Exact ID", "Vendor cyber finding", "Evidence basis", "Bank classification", "Bank frontier determination", "Monitoring"], rows)])
+                         f["Evidence Basis"], f["Organization Classification"], f["Organization Frontier Determination"], monitoring(record, state)[0]])
+        parts.extend([f"<h2>{provider}</h2>", _table(["Model", "Version", "Exact ID", "Vendor cyber finding", "Evidence basis", "Organization classification", "Organization frontier determination", "Monitoring"], rows)])
     from .benchmark_views import html_sections
     parts.extend(html_sections(state,_table))
     parts.append("<h2>Current-model evidence and decision details</h2>")
@@ -213,9 +213,9 @@ def confluence_fragment(state: dict, include_prior: bool = True) -> str:
         parts.append(_table(["Field", "Recorded value"], details))
     if include_prior:
         parts.append("<h2>Prior releases and special deployments</h2><p>Capability coverage is recorded per entry. Historical inventory is not an approval list.</p>")
-        parts.append(_table(["Provider", "Model", "Version", "Exact ID", "Lifecycle", "Bank classification", "Evidence basis", "Monitoring"],
+        parts.append(_table(["Provider", "Model", "Version", "Exact ID", "Lifecycle", "Organization classification", "Evidence basis", "Monitoring"],
                             [[r["vendor"].get("Provider"), r["vendor"].get("Model Family"), r["vendor"].get("Version"), r["vendor"].get("Exact Model ID"),
-                              r["vendor"].get("Lifecycle"), r["bank"].get("Bank Classification"), r["vendor"].get("Evidence Basis"), monitoring(r,state)[0]] for r in prior]))
+                              r["vendor"].get("Lifecycle"), r["organization"].get("Organization Classification"), r["vendor"].get("Evidence Basis"), monitoring(r,state)[0]] for r in prior]))
     failed = [s for s in state["source_checks"].values() if s["status"] == "unavailable"]
     watches = [s for s in state["sources"].values() if not s.get("record_ids")]
     parts.append("<h2>Catalog and framework watches</h2>")

@@ -28,7 +28,7 @@ has an internal link to a nonempty detail row. Native Microsoft Excel interactio
 was not executed in this Linux environment.
 
 An existing-state export completed successfully and left work/register.json
-byte-for-byte unchanged. All mappings, review states, conditional scope and bank
+byte-for-byte unchanged. All mappings, review states, conditional scope and organization
 decisions are preserved. The v1.1.1 patch requires export, not init or seed reimport.
 
 Bundled evidence:
@@ -61,7 +61,7 @@ use attributed imports; supplementary-source monitoring flags changed documents.
 
 The tests cover source parsing and filtering, configuration-specific identities,
 missing versus zero, provider and mapping boundaries, source integrity, unavailable
-sources, stale/forged reviews, history retention, conditional scope, bank decision
+sources, stale/forged reviews, history retention, conditional scope, organization decision
 binding, HTML/Excel injection and existing Confluence publishing behavior. Focused
 in-memory checks also verified raw-source acknowledgments and hashes, rejection,
 stale queue handling and all four coding/SOC HTML combinations. Those checks left
@@ -80,4 +80,4 @@ of benchmark workloads or live Confluence update was performed. The package can
 generate and publish managed Confluence content; its destination and identity must
 be configured and checked in the company's environment. Publishing defaults to a
 dry run. Local hashes/history are not a tamper-proof audit service. The script does
-not implement the bank's complete policy or autonomously approve models.
+not implement the organization's complete policy or autonomously approve models.

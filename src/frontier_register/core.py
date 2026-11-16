@@ -1,6 +1,6 @@
-"""Register state, provenance, review transactions and bank-owned decisions.
+"""Register state, provenance, review transactions and organization-owned decisions.
 
-Vendor findings are never interpreted into bank approval by this module.
+Vendor findings are never interpreted into organization approval by this module.
 State changes are atomic. Use StateLock around a load/modify/save transaction.
 """
 from __future__ import annotations
@@ -21,25 +21,25 @@ from urllib.parse import urlsplit
 
 HEADERS = [
     "Provider", "Model Usage", "Model Family", "Version", "Vendor-stated Strengths",
-    "Exact Model ID", "Lifecycle", "Access / Deployment Notes", "Bank Classification",
-    "Official Sources (URL)", "Inventory Verified On", "Bank Host / Endpoint / Region",
-    "Bank Access / Safeguard Tier", "Framework / Version / Effective Date",
+    "Exact Model ID", "Lifecycle", "Access / Deployment Notes", "Organization Classification",
+    "Official Sources (URL)", "Inventory Verified On", "Organization Host / Endpoint / Region",
+    "Organization Access / Safeguard Tier", "Framework / Version / Effective Date",
     "Risk Domains / Coverage", "Vendor Frontier Position", "Native Cyber Finding",
     "Other Native Findings", "Threshold Meaning / Reference", "Evidence Basis",
     "Assessed Model / Revision", "Evidence Date / Precision", "Primary Evidence (URL)",
     "Additional Evidence (URL)", "Evaluation Conditions", "Evidence Gaps / Coverage",
-    "Vendor Safeguards / Access", "Bank Frontier Determination", "Bank Use / Data / Tools",
-    "Bank Rationale / Open Decision", "Decision Owner", "Decision Date", "Approval Record",
+    "Vendor Safeguards / Access", "Organization Frontier Determination", "Organization Use / Data / Tools",
+    "Organization Rationale / Open Decision", "Decision Owner", "Decision Date", "Approval Record",
     "Review Triggers", "Next Review Date", "Original Suggested Treatment", "Evidence Reviewed On",
     "Framework Sources (URL)",
 ]
-BANK_FIELDS = {
-    "Bank Classification", "Bank Host / Endpoint / Region", "Bank Access / Safeguard Tier",
-    "Bank Frontier Determination", "Bank Use / Data / Tools", "Bank Rationale / Open Decision",
+ORGANIZATION_FIELDS = {
+    "Organization Classification", "Organization Host / Endpoint / Region", "Organization Access / Safeguard Tier",
+    "Organization Frontier Determination", "Organization Use / Data / Tools", "Organization Rationale / Open Decision",
     "Decision Owner", "Decision Date", "Approval Record", "Review Triggers", "Next Review Date",
 }
 IMMUTABLE_FIELDS = {"Provider", "Exact Model ID", "Original Suggested Treatment"}
-VENDOR_FIELDS = set(HEADERS) - BANK_FIELDS
+VENDOR_FIELDS = set(HEADERS) - ORGANIZATION_FIELDS
 VENDOR_EDIT_FIELDS = VENDOR_FIELDS - IMMUTABLE_FIELDS
 SOURCE_FIELDS = {"Official Sources (URL)", "Primary Evidence (URL)", "Additional Evidence (URL)", "Framework Sources (URL)"}
 DATE_FIELDS = {"Inventory Verified On", "Evidence Date / Precision", "Decision Date", "Next Review Date", "Evidence Reviewed On"}
@@ -176,13 +176,13 @@ def import_workbook(path: Path) -> dict:
                 provider, model = fields["Provider"], fields["Exact Model ID"]
                 if provider not in PROVIDERS or not isinstance(model, str) or not model.strip():
                     raise RegisterError("Each record needs an allowed provider and an exact model identifier.")
-                if fields["Bank Classification"] not in CLASSIFICATIONS or fields["Bank Frontier Determination"] not in DETERMINATIONS:
-                    raise RegisterError("Unrecognized bank decision value in seed workbook.")
+                if fields["Organization Classification"] not in CLASSIFICATIONS or fields["Organization Frontier Determination"] not in DETERMINATIONS:
+                    raise RegisterError("Unrecognized organization decision value in seed workbook.")
                 records.append({
                     "record_id": record_id(provider, model), "sheet": sheet_name,
                     "deployment_key": "unassigned",
                     "vendor": {k: v for k, v in fields.items() if k in VENDOR_FIELDS},
-                    "bank": {k: v for k, v in fields.items() if k in BANK_FIELDS},
+                    "organization": {k: v for k, v in fields.items() if k in ORGANIZATION_FIELDS},
                     "metadata": {"origin": "workbook_import", "reviewed_source_hashes": {}, "pending_sources": [],
                                  "discovery_review_required": False, "decision_vendor_sha256": None},
                 })
@@ -199,12 +199,12 @@ def import_workbook(path: Path) -> dict:
 
 
 def fields_for(record: dict) -> dict:
-    return {**record["vendor"], **record["bank"]}
+    return {**record["vendor"], **record["organization"]}
 
 
 def deployment_digest(record: dict) -> str:
-    return digest({"deployment_key": record["deployment_key"], **{k: record["bank"].get(k) for k in
-                   ("Bank Host / Endpoint / Region", "Bank Access / Safeguard Tier", "Bank Use / Data / Tools")}})
+    return digest({"deployment_key": record["deployment_key"], **{k: record["organization"].get(k) for k in
+                   ("Organization Host / Endpoint / Region", "Organization Access / Safeguard Tier", "Organization Use / Data / Tools")}})
 
 
 def catalog_digest(observation: dict | None) -> str:
@@ -271,11 +271,11 @@ def monitoring(record: dict, state: dict) -> tuple[str, str | None]:
         statuses.append("Source unavailable: retained findings may be stale")
     binding = record["metadata"].get("decision_vendor_sha256")
     if binding and binding != digest(record["vendor"]):
-        statuses.append("Bank decision requires reassessment")
+        statuses.append("Organization decision requires reassessment")
     scope_binding = record["metadata"].get("decision_deployment_sha256")
     catalog_binding = record["metadata"].get("decision_catalog_sha256")
     if (scope_binding and scope_binding != deployment_digest(record)) or (catalog_binding and catalog_binding != catalog_digest(record["metadata"].get("catalog_observation"))):
-        statuses.append("Bank decision requires reassessment: deployment or catalog changed")
+        statuses.append("Organization decision requires reassessment: deployment or catalog changed")
     if "benchmarks" in state:
         from .benchmarks import monitoring as benchmark_monitoring
         benchmark_status = benchmark_monitoring(record, state)
@@ -309,7 +309,7 @@ def make_review_queue(state: dict) -> dict:
                       "sources": sources, "catalog_observation": record["metadata"].get("catalog_observation"),
                       "raw_evidence_reviewed": False, "current_vendor_fields": record["vendor"], "proposed_updates": {}})
     return {"schema_version": 1, "state_sha256": digest(state), "generated_at": utc_now(),
-            "instructions": "Set action to update or keep_existing, add review_note and proposed_updates. Bank fields are prohibited. Dates are explicit review inputs. Leave other items pending.",
+            "instructions": "Set action to update or keep_existing, add review_note and proposed_updates. Organization fields are prohibited. Dates are explicit review inputs. Leave other items pending.",
             "items": items}
 
 
@@ -347,7 +347,7 @@ def apply_review(state: dict, queue: dict, reviewer: str) -> dict:
             raise RegisterError("Accepted reviews require update/keep_existing and a review_note.")
         changes = item.get("proposed_updates", {})
         if not isinstance(changes, dict) or set(changes) - VENDOR_EDIT_FIELDS:
-            raise RegisterError("Review attempts to change bank-owned, immutable or unknown fields.")
+            raise RegisterError("Review attempts to change organization-owned, immutable or unknown fields.")
         if action == "keep_existing" and changes:
             raise RegisterError("keep_existing cannot include proposed_updates.")
         if action == "update" and not changes:
@@ -382,41 +382,41 @@ def apply_review(state: dict, queue: dict, reviewer: str) -> dict:
     return result
 
 
-def apply_bank_decisions(state: dict, request: dict, actor: str) -> dict:
+def apply_organization_decisions(state: dict, request: dict, actor: str) -> dict:
     if not actor.strip() or request.get("state_sha256") != digest(state):
-        raise RegisterError("Bank decision request is stale or actor attribution is missing.")
+        raise RegisterError("Organization decision request is stale or actor attribution is missing.")
     result = copy.deepcopy(state)
     by_id = {r["record_id"]: r for r in result["records"]}
     seen, events = set(), []
     for item in request.get("items", []):
         rid, changes = item.get("record_id"), item.get("updates", {})
-        if rid not in by_id or rid in seen or not changes or set(changes) - BANK_FIELDS:
-            raise RegisterError("Bank update contains an unknown/duplicate record, no changes, or non-bank fields.")
+        if rid not in by_id or rid in seen or not changes or set(changes) - ORGANIZATION_FIELDS:
+            raise RegisterError("Organization update contains an unknown/duplicate record, no changes, or non-organization fields.")
         seen.add(rid)
         record = by_id[rid]
         for key, value in changes.items():
             _valid_field_value(key, value)
-        proposed = {**record["bank"], **changes}
+        proposed = {**record["organization"], **changes}
         confirm = item.get("confirm_decision") is True
-        administrative = {"Bank Host / Endpoint / Region", "Bank Access / Safeguard Tier", "Bank Use / Data / Tools", "Next Review Date", "Review Triggers"}
+        administrative = {"Organization Host / Endpoint / Region", "Organization Access / Safeguard Tier", "Organization Use / Data / Tools", "Next Review Date", "Review Triggers"}
         if set(changes) - administrative and not confirm:
             raise RegisterError("Decision fields require confirm_decision=true and a current expected_vendor_sha256.")
         if confirm and item.get("expected_vendor_sha256") != digest(record["vendor"]):
-            raise RegisterError("Bank decision must explicitly confirm the current vendor evidence hash.")
+            raise RegisterError("Organization decision must explicitly confirm the current vendor evidence hash.")
         if confirm and "benchmarks" in state:
             from .benchmarks import evidence_digest
             if item.get("expected_benchmark_sha256") != evidence_digest(record,state):
-                raise RegisterError("Bank decision must explicitly confirm the current benchmark evidence hash. Regenerate bank-template.")
-        if proposed["Bank Classification"] not in CLASSIFICATIONS or proposed["Bank Frontier Determination"] not in DETERMINATIONS:
-            raise RegisterError("Unknown bank classification or frontier determination.")
-        if confirm and proposed["Bank Classification"] != "Pending classification":
-            for key in ("Bank Rationale / Open Decision", "Decision Owner", "Decision Date", "Approval Record"):
+                raise RegisterError("Organization decision must explicitly confirm the current benchmark evidence hash. Regenerate organization-template.")
+        if proposed["Organization Classification"] not in CLASSIFICATIONS or proposed["Organization Frontier Determination"] not in DETERMINATIONS:
+            raise RegisterError("Unknown organization classification or frontier determination.")
+        if confirm and proposed["Organization Classification"] != "Pending classification":
+            for key in ("Organization Rationale / Open Decision", "Decision Owner", "Decision Date", "Approval Record"):
                 if not changes.get(key) or changes[key] in ("Unassigned", "To be specified"):
-                    raise RegisterError(f"A recorded bank decision needs {key}.")
-        if proposed["Bank Classification"] == "Eligible for assessment" and proposed["Bank Frontier Determination"] != "Outside exclusion":
+                    raise RegisterError(f"A recorded organization decision needs {key}.")
+        if proposed["Organization Classification"] == "Eligible for assessment" and proposed["Organization Frontier Determination"] != "Outside exclusion":
             raise RegisterError("Eligible for assessment requires an explicit Outside exclusion determination.")
-        previous = record["bank"]
-        record["bank"] = proposed
+        previous = record["organization"]
+        record["organization"] = proposed
         if confirm:
             record["metadata"]["decision_vendor_sha256"] = digest(record["vendor"])
             record["metadata"]["decision_deployment_sha256"] = deployment_digest(record)
@@ -424,11 +424,11 @@ def apply_bank_decisions(state: dict, request: dict, actor: str) -> dict:
             if "benchmarks" in result:
                 from .benchmarks import evidence_digest
                 record["metadata"]["decision_benchmark_sha256"] = evidence_digest(record, result)
-        events.append({"record_id": rid, "previous_bank_fields": previous, "new_bank_fields": proposed,
+        events.append({"record_id": rid, "previous_organization_fields": previous, "new_organization_fields": proposed,
                        "vendor_sha256": digest(record["vendor"]), "monitoring_at_decision": monitoring(record, state)[0]})
     if not events:
-        raise RegisterError("No bank decision items supplied.")
-    audit(result, "record_bank_decisions", actor, {"items": events})
+        raise RegisterError("No organization decision items supplied.")
+    audit(result, "record_organization_decisions", actor, {"items": events})
     return result
 
 
@@ -460,11 +460,11 @@ def merge_discovery(state: dict, provider: str, models: list[dict], allowed_pref
                        "Evidence Gaps / Coverage": "Obtain model-specific evidence, assess scope and resolve serving revision before classification.",
                        "Native Cyber Finding": "Not reviewed for this model", "Other Native Findings": "Not reviewed for this model",
                        "Original Suggested Treatment": "Discovered by automation. No original recommendation."})
-        bank = {k: None for k in BANK_FIELDS}
-        bank.update({"Bank Classification": "Pending classification", "Bank Frontier Determination": "Not determined",
-                     "Decision Owner": "Unassigned", "Bank Rationale / Open Decision": "New catalog entry requires evidence and bank review."})
+        organization = {k: None for k in ORGANIZATION_FIELDS}
+        organization.update({"Organization Classification": "Pending classification", "Organization Frontier Determination": "Not determined",
+                     "Decision Owner": "Unassigned", "Organization Rationale / Open Decision": "New catalog entry requires evidence and organization review."})
         rid = record_id(provider, mid)
-        state["records"].append({"record_id": rid, "sheet": "Model Register", "deployment_key": "unassigned", "vendor": vendor, "bank": bank,
+        state["records"].append({"record_id": rid, "sheet": "Model Register", "deployment_key": "unassigned", "vendor": vendor, "organization": organization,
                                  "metadata": {"origin": "api_discovery", "catalog_observation": model, "reviewed_source_hashes": {},
                                               "pending_sources": [], "discovery_review_required": True, "decision_vendor_sha256": None}})
         added.append(rid)

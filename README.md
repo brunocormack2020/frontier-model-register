@@ -1,5 +1,7 @@
 # Frontier model register automation — v1.1.1
 
+Terminology update: commands now use organization-template and organization-update; decision fields and saved-state keys use Organization / organization. Existing state and review files from earlier releases require a deliberate migration before use. Preserve the original state and audit history; do not perform a blind text replacement on operational JSON.
+
 ## Start here
 
 - **Populated Excel register:** [examples/first_run_model_register.xlsx](examples/first_run_model_register.xlsx). Open **Benchmark Results** for 305 published observations and **AISI Evidence** for 52 separate findings.
@@ -13,7 +15,7 @@ The workbook in `data/` is the original initialization input. The populated exam
 
 This Python package imports the supplied register, monitors official vendor evidence, records changes for review, and produces Excel, JSON and Confluence content from one source of truth. It supports **Anthropic, OpenAI and Google**.
 
-The supplied seed is `data/Bank_Frontier_Model_Register_2026-11-14.xlsx`: 23 current model records, 42 prior/special records and the original 38 fields. The seed is a dated starting point, not a continuously verified catalog. Its claims and review limitations remain intact on import.
+The supplied seed is `data/Organization_Frontier_Model_Register_2026-11-14.xlsx`: 23 current model records, 42 prior/special records and the original 38 fields. The seed is a dated starting point, not a continuously verified catalog. Its claims and review limitations remain intact on import.
 
 Version 1.1 adds seven core cyber benchmarks, conditional secure-coding and SOC tracks, and a separate AISI cyber-range evidence register. The bundled evidence contains **257 core benchmark observations, 48 conditional observations and 52 AISI findings**, collected or transcribed from public primary sources. Every observation starts pending review. Several results concern historical models; this is not complete score coverage of every current registered model.
 
@@ -27,7 +29,7 @@ Version 1.1 adds seven core cyber benchmarks, conditional secure-coding and SOC 
 | Review queue | Produces a JSON file with affected records, source hashes and evidence paths. A reviewer can retain or update vendor findings. |
 | Published benchmark collection | Reads official JSON, CSV, YAML or HTML results for the seven core benchmarks. Saves the reported model, metric, configuration, source and provenance as separate observations. |
 | Benchmark review | Separates acceptance of a published result from mapping its model label to a registered model. Exact published IDs can link automatically; labels require an attributed mapping review. |
-| Bank decisions | Stored separately. Vendor and benchmark imports/reviews cannot overwrite them. Decisions bind to vendor evidence, deployment settings, observed catalog metadata, reviewed benchmark evidence and selected scope. |
+| Organization decisions | Stored separately. Vendor and benchmark imports/reviews cannot overwrite them. Decisions bind to vendor evidence, deployment settings, observed catalog metadata, reviewed benchmark evidence and selected scope. |
 | Excel | Preserves the original 38 fields and supporting tabs. Adds six monitoring/provenance columns, Source Monitor, Benchmark Coverage, Benchmark Results, AISI Evidence and Benchmark Guide. |
 | Confluence | Produces storage HTML and a local preview. Can update a marked section of an existing Cloud or Data Center page. Publishing is a dry run unless `--apply` is supplied. |
 | Recovery and audit | Atomic state files, local version history, attributed review events, content hashes and an exclusive writer lock. |
@@ -44,7 +46,7 @@ Python 3.11 or newer is required. Run from the extracted package directory. Use 
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-tested.txt
 Copy-Item config.example.yaml config.yaml
-.\.venv\Scripts\python.exe run_register.py --config config.yaml init --workbook data/Bank_Frontier_Model_Register_2026-11-14.xlsx
+.\.venv\Scripts\python.exe run_register.py --config config.yaml init --workbook data/Organization_Frontier_Model_Register_2026-11-14.xlsx
 ```
 
 ### Linux / macOS
@@ -53,7 +55,7 @@ Copy-Item config.example.yaml config.yaml
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-tested.txt
 cp config.example.yaml config.yaml
-.venv/bin/python run_register.py --config config.yaml init --workbook data/Bank_Frontier_Model_Register_2026-11-14.xlsx
+.venv/bin/python run_register.py --config config.yaml init --workbook data/Organization_Frontier_Model_Register_2026-11-14.xlsx
 ```
 
 Initialization performs no network requests and refuses to overwrite an existing state. With the supplied configuration, it imports the workbook and both bundled benchmark evidence files. It creates:
@@ -74,11 +76,11 @@ The first export explicitly says vendor sources have not been checked by this au
 
 Paths in `config.yaml` are relative to the configuration file's directory. Place the configuration and `work_dir` on company-managed persistent storage when using a scheduler. Keep a single active writer. The local file lock is intended for one machine; use your scheduler's exclusive-job control or a database/distributed lock for multiple workers.
 
-**After initialization, edit through review and bank-update commands.** Direct changes to an exported Excel file are not silently imported on the next run. This prevents two conflicting sources of truth. To begin with a separately edited workbook, use a new `work_dir` and import it deliberately.
+**After initialization, edit through review and organization-update commands.** Direct changes to an exported Excel file are not silently imported on the next run. This prevents two conflicting sources of truth. To begin with a separately edited workbook, use a new `work_dir` and import it deliberately.
 
 ### Upgrade v1.1.0 to v1.1.1
 
-Close the generated workbook in Excel, update the project code, and retain your existing `config.yaml` and complete `work/` directory. The coverage-only patch contains `src/frontier_register/benchmark_views.py`, `src/frontier_register/__init__.py`, and `pyproject.toml`; it does not contain configuration, state, evidence seeds or bank decisions. No dependency change or state migration is required.
+Close the generated workbook in Excel, update the project code, and retain your existing `config.yaml` and complete `work/` directory. The coverage-only patch contains `src/frontier_register/benchmark_views.py`, `src/frontier_register/__init__.py`, and `pyproject.toml`; it does not contain configuration, state, evidence seeds or organization decisions. No dependency change or state migration is required.
 
 From your existing project directory in PowerShell, regenerate the workbook:
 
@@ -104,9 +106,9 @@ python run_register.py --config config.yaml benchmark-import --file data/benchma
 python run_register.py --config config.yaml export
 ```
 
-These imports add pending evidence without replacing bank decisions. Review the new coverage, queue and reassessment indicators. If a later file corrects a published result under the same observation identity, its prior content remains in history and the correction requires a fresh review. The seeds are starting evidence, not files to re-import on every scheduled run.
+These imports add pending evidence without replacing organization decisions. Review the new coverage, queue and reassessment indicators. If a later file corrects a published result under the same observation identity, its prior content remains in history and the correction requires a fresh review. The seeds are starting evidence, not files to re-import on every scheduled run.
 
-Use `benchmark-scope` to select coding or SOC work after initialization, as described below. Generate fresh bank-decision templates when recording the next decision; older templates lack the new benchmark evidence confirmation. Resume the scheduler after checking the upgraded export in your company environment.
+Use `benchmark-scope` to select coding or SOC work after initialization, as described below. Generate fresh organization-decision templates when recording the next decision; older templates lack the new benchmark evidence confirmation. Resume the scheduler after checking the upgraded export in your company environment.
 
 ## 2. Collect current evidence
 
@@ -163,7 +165,7 @@ If API access is unavailable, add a known identifier for review:
 python run_register.py --config config.yaml add-model --provider Google --model-id gemini-YOUR-EXACT-ID --display-name "Vendor model name"
 ```
 
-The prefix filters are scope controls, not security classifications. Adapt them to the inventory you maintain. Provider catalogs do not establish availability in Azure, Bedrock, Vertex or a bank-contracted service, and they do not always expose the actual checkpoint behind an alias. Record those deployment bindings separately.
+The prefix filters are scope controls, not security classifications. Adapt them to the inventory you maintain. Provider catalogs do not establish availability in Azure, Bedrock, Vertex or a organization-contracted service, and they do not always expose the actual checkpoint behind an alias. Record those deployment bindings separately.
 
 ## 4. Review evidence changes
 
@@ -198,7 +200,7 @@ This example is an editing pattern, not a new finding for any seeded model. Ente
 python run_register.py --config config.yaml apply-review --file reviewed_changes.json --reviewer "Named reviewer or company identity"
 ```
 
-The review command cannot change provider/model identity, the original suggested treatment or bank-owned fields. It does not automatically refresh evidence-review dates; those dates must reflect the review actually performed. A source change acknowledged as immaterial can retain existing vendor fields. A changed vendor finding leaves a previously recorded bank decision visible with a separate reassessment indicator.
+The review command cannot change provider/model identity, the original suggested treatment or organization-owned fields. It does not automatically refresh evidence-review dates; those dates must reflect the review actually performed. A source change acknowledged as immaterial can retain existing vendor fields. A changed vendor finding leaves a previously recorded organization decision visible with a separate reassessment indicator.
 
 Catalog/system-card index watches not yet associated with a specific model remain visible in the watch table. Their changes may identify models that need manual registration; public pages are not scraped into invented model classifications.
 
@@ -221,7 +223,7 @@ One observation means one published metric for one reported model and test confi
 | [CyberSOCEval](https://arxiv.org/html/2509.20166v1) — Malware / Threat Intelligence | Conditional: SOC | Exact-answer accuracy and, where reported, Jaccard similarity | Keep task, input modality, denominator and implementation distinct; this does not validate an entire SOC workflow. |
 | [AISI cyber ranges](https://www.aisi.gov.uk/blog/how-do-frontier-ai-agents-perform-in-multi-step-cyber-attack-scenarios) | Separate evidence | Scenario-specific mean/max progress and full-chain success | Mean progress, maximum progress and full completion are different metrics. Retain run counts, token budgets and absence of active defenders. |
 
-Published benchmark success is **not a probability of breaching the bank**. It describes performance under the reported evaluation conditions. The deployment's permissions, data, tools, human checks, monitoring and safeguards need their own assessment. Greater offensive capability, improved defensive performance and improved prompt-injection resistance are separate properties; a higher number has different meanings across these tracks.
+Published benchmark success is **not a probability of breaching the organization**. It describes performance under the reported evaluation conditions. The deployment's permissions, data, tools, human checks, monitoring and safeguards need their own assessment. Greater offensive capability, improved defensive performance and improved prompt-injection resistance are separate properties; a higher number has different meanings across these tracks.
 
 Publication or leaderboard dates, actual evaluation dates and retrieval timestamps are separate fields. A new leaderboard entry may describe an older evaluation; a retrieval today does not make the experiment current. Unknown dates and exact model snapshots remain empty rather than being inferred.
 
@@ -305,7 +307,7 @@ The example shows fields to edit, not a replacement for the full generated item.
 python run_register.py --config config.yaml benchmark-review --file reviewed_benchmark_results.json --reviewer "Named reviewer or company identity"
 ```
 
-Stale review files are rejected. Accepted results do not change bank fields. A changed accepted evidence set or conditional scope can mark an earlier bank decision for reassessment; it never silently changes the bank's classification.
+Stale review files are rejected. Accepted results do not change organization fields. A changed accepted evidence set or conditional scope can mark an earlier organization decision for reassessment; it never silently changes the organization's classification.
 
 ### Read the new outputs
 
@@ -319,18 +321,18 @@ Stale review files are rejected. Accepted results do not change bank fields. A c
 
 Each populated Coverage cell shows up to three observations in a deterministic preview, keeping each metric and configuration separate. When more are available, the cell states how many are shown. Click the cell to open its first displayed detail row; use the reported model and benchmark filters on the detail sheet to inspect all observations. The preview is not a maximum, average, ranking or combined cyber score. Percentage, fraction and count units remain distinct; approximate published counts retain that qualifier. Numeric source values remain sortable in `Benchmark Results` and `AISI Evidence`.
 
-**Exact-ID links and unconfirmed name/version suggestions are labeled separately.** Showing a candidate's published value does not assign it to the registered model or accept it as bank evidence. Reviewed labels still do not establish an exact serving checkpoint. Rejected observations are excluded from coverage previews; pending reviews, changed sources and unavailable sources remain visible. Retained coding/SOC results are shown as **Scope off; reference only** when those tracks are disabled. AISI previews retain their scenario and metric rather than producing a universal AISI score.
+**Exact-ID links and unconfirmed name/version suggestions are labeled separately.** Showing a candidate's published value does not assign it to the registered model or accept it as organization evidence. Reviewed labels still do not establish an exact serving checkpoint. Rejected observations are excluded from coverage previews; pending reviews, changed sources and unavailable sources remain visible. Retained coding/SOC results are shown as **Scope off; reference only** when those tracks are disabled. AISI previews retain their scenario and metric rather than producing a universal AISI score.
 
 `No linked published result` and unavailable-source messages describe coverage gaps, not zero scores. A published zero is displayed only when the source actually reports one. The JSON state retains complete observations and history; Excel and Confluence are generated views of that state. Coverage cells are generated by Python during `export` or `refresh`; editing a score directly in Excel does not update the register or recalculate these summaries.
 
 Some original prior/special inventory entries group several model IDs in one field. This display fix preserves those entries and the existing conservative matching rules; it does not distribute one member's score across the entire group. A result without an exact link or an existing name/version suggestion remains in the detail sheet pending an explicit mapping to an appropriate individual model record.
 
-## 6. Record the bank decision separately
+## 6. Record the organization decision separately
 
 Find the record ID in Excel's added `Record ID` column or exported JSON. Generate a request bound to the current state:
 
 ```bash
-python run_register.py --config config.yaml bank-template --record-id RECORD_UUID --output bank_decisions.json
+python run_register.py --config config.yaml organization-template --record-id RECORD_UUID --output organization_decisions.json
 ```
 
 For an actual decision, set `confirm_decision` to `true`, retain the generated `expected_vendor_sha256` **and** `expected_benchmark_sha256`, and provide the decision fields in `updates`. The benchmark hash binds the reviewed, linked evidence and selected conditional scope. Do not substitute a hash from an older template.
@@ -339,10 +341,10 @@ For an actual decision, set `confirm_decision` to `true`, retain the generated `
 {
   "confirm_decision": true,
   "updates": {
-    "Bank Classification": "Restricted",
-    "Bank Frontier Determination": "Within exclusion",
-    "Bank Rationale / Open Decision": "Apply the bank's documented definition and cite the relevant evidence.",
-    "Decision Owner": "Authorized bank decision owner",
+    "Organization Classification": "Restricted",
+    "Organization Frontier Determination": "Within exclusion",
+    "Organization Rationale / Open Decision": "Apply the organization's documented definition and cite the relevant evidence.",
+    "Decision Owner": "Authorized organization decision owner",
     "Decision Date": "2026-11-14",
     "Approval Record": "Company governance record or ticket"
   }
@@ -352,12 +354,12 @@ For an actual decision, set `confirm_decision` to `true`, retain the generated `
 This example shows the fields to edit; retain the other fields in the generated item, including both evidence hashes. A template from v1 must be regenerated before confirming a decision with the benchmark extension enabled.
 
 ```bash
-python run_register.py --config config.yaml bank-update --file bank_decisions.json --actor "Authorized operator"
+python run_register.py --config config.yaml organization-update --file organization_decisions.json --actor "Authorized operator"
 ```
 
 `Eligible for assessment` requires `Outside exclusion` and is still not production approval. A new confirmed decision must provide its rationale, owner, date and record reference explicitly. Administrative changes to hosting, access, use, triggers or the next review date do not silently reconfirm an old decision. Changed deployment settings, vendor fields, observed catalog metadata, reviewed benchmark evidence or selected scope can therefore keep an earlier decision marked for reassessment.
 
-Reviewer/actor strings provide attribution, not authentication. Company access controls must restrict these commands and the authoritative state. Local hashes and history help detect accidental inconsistency; they are not a tamper-proof audit service. Use controlled pipeline permissions and your existing governance approval process for enforcement. The script does not implement a complete bank policy engine.
+Reviewer/actor strings provide attribution, not authentication. Company access controls must restrict these commands and the authoritative state. Local hashes and history help detect accidental inconsistency; they are not a tamper-proof audit service. Use controlled pipeline permissions and your existing governance approval process for enforcement. The script does not implement a complete organization policy engine.
 
 ## 7. Publish to Confluence when you are ready
 
@@ -417,7 +419,7 @@ Recommended initial operation:
 
 1. Schedule `refresh` daily or weekly, using an account with only the source-read access it needs.
 2. Route exit code 2, pending vendor/benchmark review counts and unmapped-result counts to the team's existing monitoring process.
-3. Review changed findings and model mappings, and apply the separate vendor and benchmark review files through the bank's controlled process.
+3. Review changed findings and model mappings, and apply the separate vendor and benchmark review files through the organization's controlled process.
 4. Export automatically. Enable Confluence writes only after testing the destination and service identity.
 
 You can publish retained findings with clearly displayed monitoring warnings before every review is complete, if that is your chosen process. Publication does not approve the models. The example scheduler does not publish by default.
@@ -432,7 +434,7 @@ Run the offline tests without any credentials:
 python run_tests.py
 ```
 
-The test runner adds `src/` to its import path. Tests cover mocked HTTP behavior, pagination, evidence integrity, stale reviews, bank-field protection, decision provenance, model metadata changes, benchmark parsing and review, explicit model mapping, scope changes, safe rendering and Confluence update boundaries. The actual supplied workbook and bundled benchmark evidence have also been imported and exported locally.
+The test runner adds `src/` to its import path. Tests cover mocked HTTP behavior, pagination, evidence integrity, stale reviews, organization-field protection, decision provenance, model metadata changes, benchmark parsing and review, explicit model mapping, scope changes, safe rendering and Confluence update boundaries. The actual supplied workbook and bundled benchmark evidence have also been imported and exported locally.
 
 For the v1.1 release, live public benchmark snapshots were downloaded using `curl`, then parsed and validated with the package. The development environment's configured SOCKS proxy prevented HTTPX requests because its optional SOCKS dependency was absent. That means live-source retrieval was checked, but it was not a successful end-to-end HTTPX network test in that environment. If your approved company proxy uses SOCKS, install the corresponding HTTPX extra through your approved repository:
 
@@ -453,7 +455,7 @@ run_register.py                 Direct Python entry point
 run_tests.py                    Offline test entry point
 config.example.yaml             Paths, source hosts, watches and publisher settings
 requirements-tested.txt         Tested direct dependency versions
-src/frontier_register/core.py   State, review, discovery merge and bank decisions
+src/frontier_register/core.py   State, review, discovery merge and organization decisions
 src/frontier_register/collectors.py  Public source and vendor catalog readers
 src/frontier_register/benchmarks.py  Observation state, mapping, review and decision binding
 src/frontier_register/benchmark_collectors.py  Published core benchmark collectors

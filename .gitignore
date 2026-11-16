@@ -24,7 +24,7 @@ dist/
 # Operational state, evidence downloads, generated exports and decisions
 /work*/
 /out*/
-/bank_decisions*.json
+/organization_decisions*.json
 /reviewed*.json
 /benchmark_review*.json
 /published_evidence_update*.json

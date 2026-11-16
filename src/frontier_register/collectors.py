@@ -1,11 +1,11 @@
 """Read-only official-source collection and account-scoped model discovery.
 
-The collectors never assign a risk class or change a bank decision. A source
+The collectors never assign a risk class or change a organization decision. A source
 check is not an evidence review. API visibility is not availability assurance,
 and a model missing from a list is never classified as retired.
 
 Public-source hosts must be explicitly allowed. Host validation also rejects
-private DNS results; a bank-controlled egress proxy remains the appropriate
+private DNS results; a organization-controlled egress proxy remains the appropriate
 defence against DNS rebinding between validation and the actual connection.
 Run one writer per evidence directory (the CLI owns the process lock).
 """
@@ -252,7 +252,7 @@ def _public_get(
     current = validate_source_url(url, allowed_hosts, resolver=resolver)
     deadline = time.monotonic() + max(1.0, timeout) * 2
     headers: dict[str, Any] = {
-        "User-Agent": "BankFrontierRegister/1.0 (public evidence review)",
+        "User-Agent": "OrganizationFrontierRegister/1.0 (public evidence review)",
         "Accept": "text/html, text/plain, application/pdf, application/json;q=0.8, */*;q=0.1",
         # Do not inherit credentials/cookies from an injected client.
         "Authorization": None, "X-Api-Key": None, "x-goog-api-key": None, "Cookie": "",
@@ -460,7 +460,7 @@ def discover_models(
     key = env.get(key_name) or (env.get("GEMINI_API_KEY") if canonical == "Google" else None)
     if not key:
         raise DiscoveryError(f"{key_name} is not set")
-    headers = {"Accept": "application/json", "User-Agent": "BankFrontierRegister/1.0", "Cookie": ""}
+    headers = {"Accept": "application/json", "User-Agent": "OrganizationFrontierRegister/1.0", "Cookie": ""}
     params: dict[str, Any] = {}
     if canonical in ("OpenAI", "Anthropic"):
         headers["Authorization"] = f"Bearer {key}"
@@ -510,7 +510,7 @@ def discover_models(
                     "description": item.get("description") or "",
                     "api_metadata": {field: item[field] for field in metadata_fields if field in item},
                     "source_url": _API_ENDPOINTS[canonical], "checked_at": _now(),
-                    "scope_note": "Account-scoped API observation only. Not bank approval or assurance of deployment availability.",
+                    "scope_note": "Account-scoped API observation only. Not organization approval or assurance of deployment availability.",
                 }
             if canonical == "OpenAI":
                 if payload.get("has_more") or payload.get("nextPageToken"):

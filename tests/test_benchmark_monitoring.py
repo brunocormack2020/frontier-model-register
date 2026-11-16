@@ -35,7 +35,7 @@ class SupplementarySourceTests(unittest.TestCase):
     def test_source_change_preserves_values_review_and_original_hash(self):
         state = aisi_state()
         original = copy.deepcopy(sole_entry(state, "aisi"))
-        bank = copy.deepcopy(state["records"][0]["bank"])
+        organization = copy.deepcopy(state["records"][0]["organization"])
         with tempfile.TemporaryDirectory() as tmp, patch("frontier_register.benchmark_monitoring.fetch_sources", side_effect=fetched("b" * 64)):
             result = refresh_supplementary_sources(state, Path(tmp))
             entry = sole_entry(state, "aisi")
@@ -43,7 +43,7 @@ class SupplementarySourceTests(unittest.TestCase):
             self.assertEqual(original["data"], entry["data"])
             self.assertEqual(original["review"], entry["review"])
             self.assertEqual(original["content_sha256"], entry["content_sha256"])
-            self.assertEqual(bank, state["records"][0]["bank"])
+            self.assertEqual(organization, state["records"][0]["organization"])
             self.assertTrue(entry["source_review_required"])
             self.assertEqual("changed", entry["source_watch"]["status"])
             self.assertEqual("b" * 64, entry["source_watch"]["raw_sha256"])

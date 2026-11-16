@@ -2,7 +2,7 @@
   "schema_version": 1,
   "as_of": "2026-11-14",
   "coverage_notes": [
-    "A curated historical evidence seed, not an assertion that every latest model has public scores. Records need review before bank interpretation.",
+    "A curated historical evidence seed, not an assertion that every latest model has public scores. Records need review before organization interpretation.",
     "AISI observations use distinct studies and budgets. The selected official range studies do not report a Google model; absence is not a zero result.",
     "Secure Code and CyberSOCEval records remain conditional on coding and SOC scope. The Inspect adaptation is a small implementation-validation sample, not a reproduction of original-paper results.",
     "The original CyberSOCEval threat-intelligence figure has an unresolved denominator discrepancy against its paper text. Preserve the published values and flag the discrepancy before comparison.",

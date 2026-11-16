@@ -15,7 +15,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from frontier_register.core import (
-    BANK_FIELDS, VENDOR_FIELDS, RegisterError, StateLock, apply_bank_decisions,
+    ORGANIZATION_FIELDS, VENDOR_FIELDS, RegisterError, StateLock, apply_organization_decisions,
     apply_fetch_results, apply_review, digest, make_review_queue, merge_discovery,
     monitoring, record_id, import_workbook, normalize_value, HEADERS, fields_for,
 )
@@ -28,15 +28,15 @@ def seed_state() -> dict:
         "Provider": "Google", "Exact Model ID": "gemini-test", "Model Family": "Test model",
         "Native Cyber Finding": "Unreviewed", "Original Suggested Treatment": "Original note",
     })
-    bank = {key: None for key in BANK_FIELDS}
-    bank.update({"Bank Classification": "Pending classification", "Bank Frontier Determination": "Not determined"})
+    organization = {key: None for key in ORGANIZATION_FIELDS}
+    organization.update({"Organization Classification": "Pending classification", "Organization Frontier Determination": "Not determined"})
     rid = record_id("Google", "gemini-test")
     return {
         "schema_version": 1, "state_version": 0, "created_at": "2026-11-14T00:00:00Z",
         "updated_at": "2026-11-14T00:00:00Z", "audit": [], "sources": {}, "source_checks": {},
         "discovery_runs": [], "records": [{
             "record_id": rid, "sheet": "Model Register", "deployment_key": "unassigned",
-            "vendor": vendor, "bank": bank, "metadata": {
+            "vendor": vendor, "organization": organization, "metadata": {
                 "origin": "workbook_import", "reviewed_source_hashes": {}, "pending_sources": [],
                 "discovery_review_required": False, "decision_vendor_sha256": None,
             },
@@ -67,10 +67,10 @@ def reviewed_state() -> dict:
 class EvidenceWorkflowReview(unittest.TestCase):
     def test_raw_only_change_requires_reassessment(self):
         state = reviewed_state()
-        before_bank = copy.deepcopy(state["records"][0]["bank"])
+        before_organization = copy.deepcopy(state["records"][0]["organization"])
         add_source(state, raw_hash="raw-v2", text_hash="text-v1", status="changed")
         self.assertIn("source-1", state["records"][0]["metadata"]["pending_sources"])
-        self.assertEqual(before_bank, state["records"][0]["bank"])
+        self.assertEqual(before_organization, state["records"][0]["organization"])
         self.assertIn("Reassessment", monitoring(state["records"][0], state)[0])
 
     def test_new_source_without_extracted_text_still_needs_review(self):
@@ -84,7 +84,7 @@ class EvidenceWorkflowReview(unittest.TestCase):
         original = copy.deepcopy(state["records"][0])
         add_source(state, status="unavailable")
         self.assertEqual(original["vendor"], state["records"][0]["vendor"])
-        self.assertEqual(original["bank"], state["records"][0]["bank"])
+        self.assertEqual(original["organization"], state["records"][0]["organization"])
         self.assertIn("unavailable", monitoring(state["records"][0], state)[0])
 
     def test_stale_review_rejected_without_mutation(self):
@@ -98,8 +98,8 @@ class EvidenceWorkflowReview(unittest.TestCase):
             apply_review(state, queue, "reviewer")
         self.assertEqual(before, state)
 
-    def test_review_cannot_write_bank_decision_or_identity(self):
-        for protected in ("Bank Classification", "Exact Model ID", "Original Suggested Treatment"):
+    def test_review_cannot_write_organization_decision_or_identity(self):
+        for protected in ("Organization Classification", "Exact Model ID", "Original Suggested Treatment"):
             with self.subTest(protected=protected):
                 state = seed_state()
                 add_source(state)
@@ -119,12 +119,12 @@ class EvidenceWorkflowReview(unittest.TestCase):
         with self.assertRaises(RegisterError):
             apply_review(state, queue, "reviewer")
 
-    def test_administrative_bank_edit_cannot_reapprove_changed_evidence(self):
+    def test_administrative_organization_edit_cannot_reapprove_changed_evidence(self):
         state = seed_state()
         record = state["records"][0]
-        record["bank"].update({
-            "Bank Classification": "Eligible for assessment", "Bank Frontier Determination": "Outside exclusion",
-            "Bank Rationale / Open Decision": "Earlier finding accepted.", "Decision Owner": "Model committee",
+        record["organization"].update({
+            "Organization Classification": "Eligible for assessment", "Organization Frontier Determination": "Outside exclusion",
+            "Organization Rationale / Open Decision": "Earlier finding accepted.", "Decision Owner": "Model committee",
             "Decision Date": "2026-11-01", "Approval Record": "DEC-123",
         })
         old_binding = digest(record["vendor"])
@@ -134,7 +134,7 @@ class EvidenceWorkflowReview(unittest.TestCase):
             "record_id": record["record_id"], "updates": {"Next Review Date": "2026-12-01"},
         }]}
         try:
-            result = apply_bank_decisions(state, request, "operator")
+            result = apply_organization_decisions(state, request, "operator")
         except RegisterError:
             return  # Requiring an explicit decision transaction is also safe.
         self.assertEqual(old_binding, result["records"][0]["metadata"]["decision_vendor_sha256"])
@@ -166,8 +166,8 @@ class EvidenceWorkflowReview(unittest.TestCase):
         state = seed_state()
         merge_discovery(state, "Google", [{"model_id": "gemini-new", "display_name": "New model", "description": "Vendor description"}], ["gemini-"])
         record = next(r for r in state["records"] if r["vendor"]["Exact Model ID"] == "gemini-new")
-        self.assertEqual("Pending classification", record["bank"]["Bank Classification"])
-        self.assertEqual("Not determined", record["bank"]["Bank Frontier Determination"])
+        self.assertEqual("Pending classification", record["organization"]["Organization Classification"])
+        self.assertEqual("Not determined", record["organization"]["Organization Frontier Determination"])
         self.assertTrue(record["metadata"]["discovery_review_required"])
 
     def test_overlapping_writer_refused_and_lock_released(self):
@@ -182,11 +182,11 @@ class EvidenceWorkflowReview(unittest.TestCase):
     def test_review_then_admin_edit_keeps_explicit_decision_stale(self):
         state = reviewed_state()
         record = state["records"][0]
-        state = apply_bank_decisions(state, {"state_sha256": digest(state), "items": [{
+        state = apply_organization_decisions(state, {"state_sha256": digest(state), "items": [{
             "record_id": record["record_id"], "confirm_decision": True,
             "expected_vendor_sha256": digest(record["vendor"]), "updates": {
-                "Bank Classification": "Eligible for assessment", "Bank Frontier Determination": "Outside exclusion",
-                "Bank Rationale / Open Decision": "Reviewed under the bank exclusion definition.",
+                "Organization Classification": "Eligible for assessment", "Organization Frontier Determination": "Outside exclusion",
+                "Organization Rationale / Open Decision": "Reviewed under the organization exclusion definition.",
                 "Decision Owner": "Model committee", "Decision Date": "2026-11-14", "Approval Record": "DEC-001",
             },
         }]}, "decision-maker")
@@ -196,11 +196,11 @@ class EvidenceWorkflowReview(unittest.TestCase):
         queue["items"][0].update(action="update", review_note="New model threshold finding reviewed.",
                                   proposed_updates={"Native Cyber Finding": "A changed vendor threshold finding"})
         state = apply_review(state, queue, "evidence-reviewer")
-        state = apply_bank_decisions(state, {"state_sha256": digest(state), "items": [{
+        state = apply_organization_decisions(state, {"state_sha256": digest(state), "items": [{
             "record_id": state["records"][0]["record_id"], "updates": {"Next Review Date": "2026-12-01"},
         }]}, "administrator")
         self.assertEqual(binding, state["records"][0]["metadata"]["decision_vendor_sha256"])
-        self.assertIn("Bank decision requires reassessment", monitoring(state["records"][0], state)[0])
+        self.assertIn("Organization decision requires reassessment", monitoring(state["records"][0], state)[0])
 
     def test_same_catalog_content_new_observation_time_is_not_a_change(self):
         state = seed_state()
@@ -217,18 +217,18 @@ class EvidenceWorkflowReview(unittest.TestCase):
     def test_changed_deployment_scope_remains_visible_after_admin_edit(self):
         state = reviewed_state()
         record = state["records"][0]
-        state = apply_bank_decisions(state, {"state_sha256": digest(state), "items": [{
+        state = apply_organization_decisions(state, {"state_sha256": digest(state), "items": [{
             "record_id": record["record_id"], "confirm_decision": True,
             "expected_vendor_sha256": digest(record["vendor"]), "updates": {
-                "Bank Classification": "Eligible for assessment", "Bank Frontier Determination": "Outside exclusion",
-                "Bank Rationale / Open Decision": "Accepted only with read-only tools.",
-                "Bank Use / Data / Tools": "Read-only tools", "Decision Owner": "Committee",
+                "Organization Classification": "Eligible for assessment", "Organization Frontier Determination": "Outside exclusion",
+                "Organization Rationale / Open Decision": "Accepted only with read-only tools.",
+                "Organization Use / Data / Tools": "Read-only tools", "Decision Owner": "Committee",
                 "Decision Date": "2026-11-14", "Approval Record": "DEC-002",
             },
         }]}, "decision-maker")
-        state = apply_bank_decisions(state, {"state_sha256": digest(state), "items": [{
+        state = apply_organization_decisions(state, {"state_sha256": digest(state), "items": [{
             "record_id": state["records"][0]["record_id"],
-            "updates": {"Bank Use / Data / Tools": "Write-enabled privileged tools"},
+            "updates": {"Organization Use / Data / Tools": "Write-enabled privileged tools"},
         }]}, "administrator")
         self.assertIn("reassessment", monitoring(state["records"][0], state)[0].lower())
 
@@ -305,7 +305,7 @@ class ExportIntegrationReview(unittest.TestCase):
     def test_excel_keeps_all_original_fields_and_neutralizes_formula_text(self):
         from openpyxl import load_workbook
         root = Path(__file__).resolve().parents[1]
-        template = root / "data" / "Bank_Frontier_Model_Register_2026-11-14.xlsx"
+        template = root / "data" / "Organization_Frontier_Model_Register_2026-11-14.xlsx"
         state = import_workbook(template)
         attack = '=HYPERLINK("https://example.test", "Do not execute")'
         state["records"][0]["vendor"]["Vendor-stated Strengths"] = attack
@@ -338,7 +338,7 @@ class ExportIntegrationReview(unittest.TestCase):
         import yaml
         from frontier_register.cli import main
         root = Path(__file__).resolve().parents[1]
-        template = root / "data" / "Bank_Frontier_Model_Register_2026-11-14.xlsx"
+        template = root / "data" / "Organization_Frontier_Model_Register_2026-11-14.xlsx"
         cfg = yaml.safe_load((root / "config.example.yaml").read_text())
         cfg["benchmarks"]["seed_files"] = [str(root / value) for value in cfg["benchmarks"]["seed_files"]]
         with tempfile.TemporaryDirectory() as tmp:

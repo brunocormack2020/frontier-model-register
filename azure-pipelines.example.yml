@@ -12,8 +12,8 @@ schedules:
 pool:
   name: YourApprovedSelfHostedPool
 variables:
-  FrontierPython: /opt/bank-frontier-register/.venv/bin/python
-  FrontierConfigPath: /srv/bank-frontier-register/config.yaml
+  FrontierPython: /opt/organization-frontier-register/.venv/bin/python
+  FrontierConfigPath: /srv/organization-frontier-register/config.yaml
 steps:
   - checkout: self
   - bash: |

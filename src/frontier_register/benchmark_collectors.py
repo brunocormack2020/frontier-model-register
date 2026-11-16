@@ -1,7 +1,7 @@
 """Collect published benchmark observations; never execute benchmark workloads.
 
 All parsers are data-only. They do not execute page JavaScript, follow report
-links, run repositories, call an LLM, classify models, or modify bank decisions.
+links, run repositories, call an LLM, classify models, or modify organization decisions.
 Scores remain attached to their reported model, agent and evaluation settings.
 The defaults cover seven official sources. ``settings.sources`` may override a
 source URL by benchmark ID; overrides must still pass the exact public-host
