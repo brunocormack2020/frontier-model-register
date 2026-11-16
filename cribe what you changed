@@ -1,0 +1,441 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 0b50928..5c4bd7b 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -24,7 +24,7 @@[m [mdist/[m
+ # Operational state, evidence downloads, generated exports and decisions[m
+ /work*/[m
+ /out*/[m
+[31m-/bank_decisions*.json[m
+[32m+[m[32m/organization_decisions*.json[m
+ /reviewed*.json[m
+ /benchmark_review*.json[m
+ /published_evidence_update*.json[m
+[1mdiff --git a/CHANGELOG.md b/CHANGELOG.md[m
+[1mindex 630fe9f..2eed55e 100644[m
+[1m--- a/CHANGELOG.md[m
+[1m+++ b/CHANGELOG.md[m
+[36m@@ -8,7 +8,7 @@[m
+ - Added internal links to the first displayed `Benchmark Results` or `AISI Evidence` row. Longer evidence lists are explicitly marked as a preview, with all observations retained in the detail sheets.[m
+ - Preserved separate metrics, units, configurations, approximate-count qualifiers and AISI scenarios. No averaging, best-score selection or inferred denominators are used.[m
+ - Kept pending/rejected review boundaries, source-change warnings and scope selection intact. Retained coding/SOC results can be viewed with a scope-off reference label.[m
+[31m-- Left model mapping policy, evidence, bank decisions and operational state unchanged. Existing v1.1.0 users update the code and run `export`; no reinitialization, seed reimport or dependency update is required.[m
+[32m+[m[32m- Left model mapping policy, evidence, organization decisions and operational state unchanged. Existing v1.1.0 users update the code and run `export`; no reinitialization, seed reimport or dependency update is required.[m
+ [m
+ ## 1.1.0 — 14 November 2026[m
+ [m
+[36m@@ -24,11 +24,11 @@[m
+ [m
+ - Added `benchmark-refresh`, `benchmark-import`, `benchmark-review` and `benchmark-scope` commands. Normal source refresh includes configured core benchmarks unless the run targets selected vendor source IDs without `--benchmarks`.[m
+ - Added Benchmark Coverage, Benchmark Results, AISI Evidence and Benchmark Guide workbook sheets, two main-register summary columns, and separate Confluence benchmark sections.[m
+[31m-- Added a benchmark review queue, observation history and benchmark evidence hashes for bank-decision confirmation. Accepted evidence and scope changes can trigger reassessment without changing bank decisions.[m
+[32m+[m[32m- Added a benchmark review queue, observation history and benchmark evidence hashes for organization-decision confirmation. Accepted evidence and scope changes can trigger reassessment without changing organization decisions.[m
+ - Kept the JSON state authoritative. Collection retrieves published evidence; the package does not call an LLM or execute benchmark workloads.[m
+ [m
+ ### Upgrade and validation[m
+ [m
+[31m-Existing v1 users should back up their operational state, update the configuration and dependencies, import both bundled evidence JSON files, and export again. **Do not reinitialize an existing register.** See the README's upgrade instructions. Generate new bank-decision templates before confirming decisions because v1 templates lack `expected_benchmark_sha256`.[m
+[32m+[m[32mExisting v1 users should back up their operational state, update the configuration and dependencies, import both bundled evidence JSON files, and export again. **Do not reinitialize an existing register.** See the README's upgrade instructions. Generate new organization-decision templates before confirming decisions because v1 templates lack `expected_benchmark_sha256`.[m
+ [m
+ The release's public-source snapshots were collected using `curl` and validated with the parsers. A missing optional SOCKS dependency prevented an end-to-end HTTPX network check in the development environment. Company proxy, source-access and Confluence checks remain necessary; this release is not a blanket production-readiness certification.[m
+[1mdiff --git a/MANIFEST.sha256 b/MANIFEST.sha256[m
+[1mindex cc817d6..1b15537 100644[m
+[1m--- a/MANIFEST.sha256[m
+[1m+++ b/MANIFEST.sha256[m
+[36m@@ -1,44 +1,44 @@[m
+[31m-c02bd811a26ffb4c5d1f76d5b602c80fbabb14c42774a63716ce6083bfe6ebd4  .gitignore[m
+[31m-f69feb6a378c17490338335542e778b6d4d8324b1596175645c9ddc4de2f1032  CHANGELOG.md[m
+[31m-397dcbb04ccc07061552a1f79500da84e716553bd962692c3f25fd0273c91a11  README.md[m
+[31m-912aad0891f3741bbfb8cf5aea34426a84889d7c9b5429d2e2c5fab18606ce79  azure-pipelines.example.yml[m
+[31m-62c436e77f6d898eeede6482787f89cc898d99de10605907a10ceabd9cdbe95b  config.example.yaml[m
+[31m-77f8b4070e91aadba163f0007fb04531e3e41f8264aef957c6f2e3c49d8568ab  data/Bank_Frontier_Model_Register_2026-11-14.xlsx[m
+[31m-833ee9b1882264765ad0e5d50deed1644b5b479230631b5468da3ff628b922b0  data/benchmark_evidence_seed.json[m
+[31m-db62d208d88ab34ce5e4f4f41df5d75302567236404f2f1de33ad40b9f83fb4f  data/benchmark_results_seed.json[m
+[31m-1cdd806efe9354046ef1e8431fe68470c37100f3921fd94ecea7f717fd758872  data/benchmark_source_snapshots/20250321_t-agent_gpt4o.yml[m
+[31m-1c84ddbdeb09d6732fbc4539a93e704e1b4de729f55e0be35eaec58faa8a4597  data/benchmark_source_snapshots/20260411_cvebench_claude-opus-4-6.yml[m
+[31m-ae7f74e4f4233d2b3e85e8eb237be8d5e0328c37a727e910f414b141d74e9331  data/benchmark_source_snapshots/agentdojo_table.json[m
+[31m-f2cdcdc2ee8620075e397d451d4697d2eb8cd60167a4d0f0a9b4110b40cc0a74  data/benchmark_source_snapshots/cve_bench_index.json[m
+[31m-846bb17951ec9f7c103486d7c0344974decd2d57f1039df26f9e84986704da45  data/benchmark_source_snapshots/cybench.csv[m
+[31m-5a08c7021de38bcfcb9afed886beca4b2d2aa44a16ba2d4a9e30db67d81d49aa  data/benchmark_source_snapshots/cyberbingym.json[m
+[31m-05a59f9f5c398bbabeb672164e7f172ecab00294f329a0a24a6a95b2a0951c34  data/benchmark_source_snapshots/cybergym-e2e.json[m
+[31m-5a5f638ab57531c66a10ba4db54ab20c72af720f0fcb07423951bfef8af4d506  data/benchmark_source_snapshots/cybergym.json[m
+[31m-90261bc517dd5c6c31294c19f99367bf022d85514327380915e8d1d229b92a62  data/benchmark_source_snapshots/exploitgym.json[m
+[31m-60f4c6b9db8bc30c8b9d769e9ef996170ed1cc7ec6fffd74d6e66bdeb1f6476f  docs/GITHUB_SETUP.md[m
+[31m-57e82fe88c6a83d67669872372591a3417b16e70072b96e088942c924a48e3d6  examples/VALIDATION.txt[m
+[31m-84965872a33266cbb8e1e76d20e07959a1698c9583b462ee3c7b3909bfecec58  examples/first_run_model_register.xlsx[m
+[31m-0f89a679c3e48a08c503d7f31c06b7a22f57d904fbe8440e75c2bc1901e7d04c  examples/first_run_register_preview.html[m
+[31m-adc90cc0a841f14e53e85674045ad88ea48476245511dbca5198763ec170415b  pyproject.toml[m
+[31m-b1273fd18ec28ac63036c49bb98044c69b932806edf2a286c9731aae50bedd2a  requirements-tested.txt[m
+[31m-7983fb1daa26c7175090f5e04b5cd53732054331eb9c6f905fcac0ead9e82ded  run_register.py[m
+[31m-81ad35ab8841d9780a70cbd63623b7a9681d9004196377aeca7436dc91d9a03d  run_tests.py[m
+[31m-3b03f56ce77904154a713c120f424db702824b7694463693b46e97cbde11533c  scripts/refresh.ps1[m
+[31m-5c2c6fbdb7717fbfad4723a04fcf805c4987ee45f29f552bbdc5a957ad7d05a4  src/frontier_register/__init__.py[m
+[31m-935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d  src/frontier_register/__main__.py[m
+[31m-04238af6aced7cb4a32008ecaac1c7369ee95ba7f9ccaa3e4c7e245d1dbcc62b  src/frontier_register/benchmark_collectors.py[m
+[31m-f47026fd7c33e00069f39bae5185cea1b0976068d3c8b9adea113067155ef944  src/frontier_register/benchmark_monitoring.py[m
+[31m-d1c50be82aa09ff0ff703ed1214a1d543bd037cc4428a3a70c1f85d42c7adf63  src/frontier_register/benchmark_views.py[m
+[31m-c47bf6e54d54b60a66b8924ff707df353719d4462c614a9d87fb718d800941ec  src/frontier_register/benchmarks.py[m
+[31m-21146d3a3e95d2517733dfd989232c4ee3ed8219f8c9d98c0aa6dc3d401ff3ba  src/frontier_register/cli.py[m
+[31m-b2af85c7914797219e0c52a085a4073f18032daef9278a64cc699d515f2a582a  src/frontier_register/collectors.py[m
+[31m-c50c6d53038fbb55b50b717d0e658dae9f6e022ba2adcda66cc44ff1c544a350  src/frontier_register/confluence.py[m
+[31m-15b4031a49820e88a84c90b4d36bca776cae98eccc3522cd5c1048783c81a21d  src/frontier_register/core.py[m
+[31m-98e837d7d2522911ebc5870e31db44f4d7f48eb3d9292d99977ee593a8f2dac7  src/frontier_register/render.py[m
+[31m-32418b72c99099f98b38018a1b4137c8e9afac3bcfe992cc29f5d69d4754358f  tests/test_benchmark_collectors.py[m
+[31m-cb7c7ca2c6d7df5c4a178a6237c687f9367285aa4bc577a95f725538bc5c5569  tests/test_benchmark_coverage_scores.py[m
+[31m-36c43570c477f269b4cecae36660ca815e604154ffdc421885f84a995aeda0d0  tests/test_benchmark_monitoring.py[m
+[31m-360465f40c394b1855097d31f0bd18178aba06bf06959a3480912f1088523e6a  tests/test_benchmark_workflow.py[m
+[31m-4e5aff00296394165f1583e288a9ff2799caa83ec6c033fc8eb06e4b03198146  tests/test_collectors.py[m
+[31m-389ee2e6d5bfbe1d77506b518cea606a2b422db31bde2efa88905be6b5d93bbf  tests/test_confluence.py[m
+[31m-2020b912017f052e89cc335cf534d83ef49c41f1055f4fbcbe3ae5b0372483ed  tests/test_workflow_review.py[m
+[32m+[m[32me73b3d0d86a644ebefa07a43e701d35e47bd12bd1797d35412830ec7b3421c6d  .gitignore[m
+[32m+[m[32m0958fbc2a09962cffcc09f7becceaa2ad32d1afe12885acac6dc8b93e9ac1604  CHANGELOG.md[m
+[32m+[m[32mb2ead90aec8ed1c703551a298664791fbd7551e80de67cff8939ad1fadfa01b3  README.md[m
+[32m+[m[32m0566873cd66857e79fe47d3a53e21729b88f809f7b4828f5f68db13c8dabc86b  azure-pipelines.example.yml[m
+[32m+[m[32mdd494f2152b40aa9ab2bc7578225773fe2998bcdd93be5820d4ef2f6b112696e  config.example.yaml[m
+[32m+[m[32m972bdbeadacda0fe08b8e4272fe4675077a064a93d4c188cbbc00f36c735eac0  data/Organization_Frontier_Model_Register_2026-11-14.xlsx[m
+[32m+[m[32m9ba716938c1389b867c671e45a78857f168dc55080aeb9d70dd7d12e81500b0f  data/benchmark_evidence_seed.json[m
+[32m+[m[32mb58630a8b5e2f312902c60130c282c5bb791930d21565f177ce6164ae4406b3b  data/benchmark_results_seed.json[m
+[32m+[m[32m4968ca3e251f9fb37d9c67f1ca9191168ba24b658e89685d4afa7db1e8af050e  data/benchmark_source_snapshots/20250321_t-agent_gpt4o.yml[m
+[32m+[m[32m84f823ce10e01c7bc4630b0c5247a4285b9fe5be05de5d8784218db84b403f66  data/benchmark_source_snapshots/20260411_cvebench_claude-opus-4-6.yml[m
+[32m+[m[32m8709cf0c4de7155bb413fca32b2ec25b3c53329b0ad5a7c28fa60c06d99f9847  data/benchmark_source_snapshots/agentdojo_table.json[m
+[32m+[m[32m841985f8d4417fc7991ad8e347d82093667c05df3ffd85275198a7a3f3fcfa00  data/benchmark_source_snapshots/cve_bench_index.json[m
+[32m+[m[32m560506a98e0b3e916434c3ad243a7a9930cd5579d8e8f689e3a4a10e9b7d1da8  data/benchmark_source_snapshots/cybench.csv[m
+[32m+[m[32m3fb85c1169c968af70f757bd01c6650ef9b042b7d7b18120d2ed592fe49511bb  data/benchmark_source_snapshots/cyberbingym.json[m
+[32m+[m[32mc95d0ff2face29e2f16c2ef3c6ad7cd6f41ce9155d7577d8a3e50b2d9a28e936  data/benchmark_source_snapshots/cybergym-e2e.json[m
+[32m+[m[32mbce92e13c9b64763d6e3f2a1716d1bb0c12a7ac659569d69c45ff097f69cbe35  data/benchmark_source_snapshots/cybergym.json[m
+[32m+[m[32m50e50d6ddccaaad710800c0dc7dd114657cff35fcfa7becaf24f3646d86e7fb5  data/benchmark_source_snapshots/exploitgym.json[m
+[32m+[m[32m21a35bf8493c3e4b404206bef530ae863acc1727adab28a5452c8a80eb08b0dd  docs/GITHUB_SETUP.md[m
+[32m+[m[32meaa26f648fe6ea916f4cbcc961b0f9d27ad703bc68fa93ca3f90ae05536fb459  examples/VALIDATION.txt[m
+[32m+[m[32m71c856161b09a16ad56f75907112dd12cedbfb543d30e722fc1c779187d6c628  examples/first_run_model_register.xlsx[m
+[32m+[m[32m8c33fc12a711f1da4dde2598e189ee1ef2f4a066025dda5beb7f6f90584f615d  examples/first_run_register_preview.html[m
+[32m+[m[32m68efc80a09db943d2bf95b40f42a47623fbc671c4a07860498f8d9dddc370b0a  pyproject.toml[m
+[32m+[m[32m311df82586180ab8809d03269a960bb34ca63307811efb201acef24380c3459d  requirements-tested.txt[m
+[32m+[m[32mf84707439aa5df4f704ad42a878be0b449fd5d03e50ec299812960cc9e9eb91a  run_register.py[m
+[32m+[m[32m3be99b152d09b4434f228e53ddd72727cac9ece572fa4005041f5cb85462f3b2  run_tests.py[m
+[32m+[m[32mff7d6d4a74c2e9866e6271dc7332adf7717a8ee7126779b29cfd66d8e6f75555  scripts/refresh.ps1[m
+[32m+[m[32m80f54614eff77025c229e7eaf0b311a4733faa9798e22e87ae9825bcfd07049b  src/frontier_register/__init__.py[m
+[32m+[m[32m482b8693e2fe6dbd732e3d7961e03827d3efa187bad11d29da188be580ebbeea  src/frontier_register/__main__.py[m
+[32m+[m[32m609a7de8fbae066955132ccea6415428f549cc9992b58d1bd8ccb05db14ef190  src/frontier_register/benchmark_collectors.py[m
+[32m+[m[32m313df8a3246288711e11255b7e3091dfbea7de437d20171d0bf9731806e6eb5c  src/frontier_register/benchmark_monitoring.py[m
+[32m+[m[32m01d1ba9fa2771b13dde7f9a481e55d49a6b6d728fdf70fb9f198ddf27bb1e19f  src/frontier_register/benchmark_views.py[m
+[32m+[m[32m375847dc43f9e0d5581d891bd80fc0d48ed69d19737b56f03a1c152b88b48028  src/frontier_register/benchmarks.py[m
+[32m+[m[32m712285bfc6e330956f7b1a92f64aaa746dc06845fff4466fdcda11a528ff5371  src/frontier_register/cli.py[m
+[32m+[m[32mf951ac15e35b739c4e9478003345d3e61d95bb7cdddb572fddc67e04900f7275  src/frontier_register/collectors.py[m
+[32m+[m[32ma568c3e4aaceed1d980fedd0dd0b02084e1bd09da39c8e82dd5f7db1ef04b70f  src/frontier_register/confluence.py[m
+[32m+[m[32me040b62814a1715378a1cf2aa115a4cd1d7e7846d8a35c1f98dc42732f5f7a95  src/frontier_register/core.py[m
+[32m+[m[32m7c4f38d55f04b1a12edc2e12f552f6a546d4d734361cbc8bd7ab9fee73f16c75  src/frontier_register/render.py[m
+[32m+[m[32me06db1f2427cf7302f7228f4bd4e928c63ae5da37077457e38575f1cf93a74a5  tests/test_benchmark_collectors.py[m
+[32m+[m[32m5f3196c9f1c392b18a52eb05ce3aaa9d85974ed3fff050fd572b601af523f8ac  tests/test_benchmark_coverage_scores.py[m
+[32m+[m[32m78709ffeb86ae9c2e06d2be0d0fbdef951b96df09f7eb7ea3e277e3ea81fb4e6  tests/test_benchmark_monitoring.py[m
+[32m+[m[32m9dfd8df84c9b3ed293905e5a2a4d918e741b4fad997fa80e93c4bc08d13d504c  tests/test_benchmark_workflow.py[m
+[32m+[m[32m454c427bd48784bafb0b0d44e06b5a0225212b3efe87a393f777542fca9a5548  tests/test_collectors.py[m
+[32m+[m[32m6c2c2484190070b371a592e27db886b15532dba7ab3327492e19f703fac6b556  tests/test_confluence.py[m
+[32m+[m[32mb0310c8f105ff1a4ce3fd11a643e32ac3fc1a7c07113ca8c7e78ed198c07af14  tests/test_workflow_review.py[m
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 7b05b98..2d9e289 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -1,5 +1,7 @@[m
+ # Frontier model register automation — v1.1.1[m
+ [m
+[32m+[m[32mTerminology update: commands now use organization-template and organization-update; decision fields and saved-state keys use Organization / organization. Existing state and review files from earlier releases require a deliberate migration before use. Preserve the original state and audit history; do not perform a blind text replacement on operational JSON.[m
+[32m+[m
+ ## Start here[m
+ [m
+ - **Populated Excel register:** [examples/first_run_model_register.xlsx](examples/first_run_model_register.xlsx). Open **Benchmark Results** for 305 published observations and **AISI Evidence** for 52 separate findings.[m
+[36m@@ -13,7 +15,7 @@[m [mThe workbook in `data/` is the original initialization input. The populated exam[m
+ [m
+ This Python package imports the supplied register, monitors official vendor evidence, records changes for review, and produces Excel, JSON and Confluence content from one source of truth. It supports **Anthropic, OpenAI and Google**.[m
+ [m
+[31m-The supplied seed is `data/Bank_Frontier_Model_Register_2026-11-14.xlsx`: 23 current model records, 42 prior/special records and the original 38 fields. The seed is a dated starting point, not a continuously verified catalog. Its claims and review limitations remain intact on import.[m
+[32m+[m[32mThe supplied seed is `data/Organization_Frontier_Model_Register_2026-11-14.xlsx`: 23 current model records, 42 prior/special records and the original 38 fields. The seed is a dated starting point, not a continuously verified catalog. Its claims and review limitations remain intact on import.[m
+ [m
+ Version 1.1 adds seven core cyber benchmarks, conditional secure-coding and SOC tracks, and a separate AISI cyber-range evidence register. The bundled evidence contains **257 core benchmark observations, 48 conditional observations and 52 AISI findings**, collected or transcribed from public primary sources. Every observation starts pending review. Several results concern historical models; this is not complete score coverage of every current registered model.[m
+ [m
+[36m@@ -27,7 +29,7 @@[m [mVersion 1.1 adds seven core cyber benchmarks, conditional secure-coding and SOC[m
+ | Review queue | Produces a JSON file with affected records, source hashes and evidence paths. A reviewer can retain or update vendor findings. |[m
+ | Published benchmark collection | Reads official JSON, CSV, YAML or HTML results for the seven core benchmarks. Saves the reported model, metric, configuration, source and provenance as separate observations. |[m
+ | Benchmark review | Separates acceptance of a published result from mapping its model label to a registered model. Exact published IDs can link automatically; labels require an attributed mapping review. |[m
+[31m-| Bank decisions | Stored separately. Vendor and benchmark imports/reviews cannot overwrite them. Decisions bind to vendor evidence, deployment settings, observed catalog metadata, reviewed benchmark evidence and selected scope. |[m
+[32m+[m[32m| Organization decisions | Stored separately. Vendor and benchmark imports/reviews cannot overwrite them. Decisions bind to vendor evidence, deployment settings, observed catalog metadata, reviewed benchmark evidence and selected scope. |[m
+ | Excel | Preserves the original 38 fields and supporting tabs. Adds six monitoring/provenance columns, Source Monitor, Benchmark Coverage, Benchmark Results, AISI Evidence and Benchmark Guide. |[m
+ | Confluence | Produces storage HTML and a local preview. Can update a marked section of an existing Cloud or Data Center page. Publishing is a dry run unless `--apply` is supplied. |[m
+ | Recovery and audit | Atomic state files, local version history, attributed review events, content hashes and an exclusive writer lock. |[m
+[36m@@ -44,7 +46,7 @@[m [mPython 3.11 or newer is required. Run from the extracted package directory. Use[m
+ py -m venv .venv[m
+ .\.venv\Scripts\python.exe -m pip install -r requirements-tested.txt[m
+ Copy-Item config.example.yaml config.yaml[m
+[31m-.\.venv\Scripts\python.exe run_register.py --config config.yaml init --workbook data/Bank_Frontier_Model_Register_2026-11-14.xlsx[m
+[32m+[m[32m.\.venv\Scripts\python.exe run_register.py --config config.yaml init --workbook data/Organization_Frontier_Model_Register_2026-11-14.xlsx[m
+ ```[m
+ [m
+ ### Linux / macOS[m
+[36m@@ -53,7 +55,7 @@[m [mCopy-Item config.example.yaml config.yaml[m
+ python3 -m venv .venv[m
+ .venv/bin/python -m pip install -r requirements-tested.txt[m
+ cp config.example.yaml config.yaml[m
+[31m-.venv/bin/python run_register.py --config config.yaml init --workbook data/Bank_Frontier_Model_Register_2026-11-14.xlsx[m
+[32m+[m[32m.venv/bin/python run_register.py --config config.yaml init --workbook data/Organization_Frontier_Model_Register_2026-11-14.xlsx[m
+ ```[m
+ [m
+ Initialization performs no network requests and refuses to overwrite an existing state. With the supplied configuration, it imports the workbook and both bundled benchmark evidence files. It creates:[m
+[36m@@ -74,11 +76,11 @@[m [mThe first export explicitly says vendor sources have not been checked by this au[m
+ [m
+ Paths in `config.yaml` are relative to the configuration file's directory. Place the configuration and `work_dir` on company-managed persistent storage when using a scheduler. Keep a single active writer. The local file lock is intended for one machine; use your scheduler's exclusive-job control or a database/distributed lock for multiple workers.[m
+ [m
+[31m-**After initialization, edit through review and bank-update commands.** Direct changes to an exported Excel file are not silently imported on the next run. This prevents two conflicting sources of truth. To begin with a separately edited workbook, use a new `work_dir` and import it deliberately.[m
+[32m+[m[32m**After initialization, edit through review and organization-update commands.** Direct changes to an exported Excel file are not silently imported on the next run. This prevents two conflicting sources of truth. To begin with a separately edited workbook, use a new `work_dir` and import it deliberately.[m
+ [m
+ ### Upgrade v1.1.0 to v1.1.1[m
+ [m
+[31m-Close the generated workbook in Excel, update the project code, and retain your existing `config.yaml` and complete `work/` directory. The coverage-only patch contains `src/frontier_register/benchmark_views.py`, `src/frontier_register/__init__.py`, and `pyproject.toml`; it does not contain configuration, state, evidence seeds or bank decisions. No dependency change or state migration is required.[m
+[32m+[m[32mClose the generated workbook in Excel, update the project code, and retain your existing `config.yaml` and complete `work/` directory. The coverage-only patch contains `src/frontier_register/benchmark_views.py`, `src/frontier_register/__init__.py`, and `pyproject.toml`; it does not contain configuration, state, evidence seeds or organization decisions. No dependency change or state migration is required.[m
+ [m
+ From your existing project directory in PowerShell, regenerate the workbook:[m
+ [m
+[36m@@ -104,9 +106,9 @@[m [mpython run_register.py --config config.yaml benchmark-import --file data/benchma[m
+ python run_register.py --config config.yaml export[m
+ ```[m
+ [m
+[31m-These imports add pending evidence without replacing bank decisions. Review the new coverage, queue and reassessment indicators. If a later file corrects a published result under the same observation identity, its prior content remains in history and the correction requires a fresh review. The seeds are starting evidence, not files to re-import on every scheduled run.[m
+[32m+[m[32mThese imports add pending evidence without replacing organization decisions. Review the new coverage, queue and reassessment indicators. If a later file corrects a published result under the same observation identity, its prior content remains in history and the correction requires a fresh review. The seeds are starting evidence, not files to re-import on every scheduled run.[m
+ [m
+[31m-Use `benchmark-scope` to select coding or SOC work after initialization, as described below. Generate fresh bank-decision templates when recording the next decision; older templates lack the new benchmark evidence confirmation. Resume the scheduler after checking the upgraded export in your company environment.[m
+[32m+[m[32mUse `benchmark-scope` to select coding or SOC work after initialization, as described below. Generate fresh organization-decision templates when recording the next decision; older templates lack the new benchmark evidence confirmation. Resume the scheduler after checking the upgraded export in your company environment.[m
+ [m
+ ## 2. Collect current evidence[m
+ [m
+[36m@@ -163,7 +165,7 @@[m [mIf API access is unavailable, add a known identifier for review:[m
+ python run_register.py --config config.yaml add-model --provider Google --model-id gemini-YOUR-EXACT-ID --display-name "Vendor model name"[m
+ ```[m
+ [m
+[31m-The prefix filters are scope controls, not security classifications. Adapt them to the inventory you maintain. Provider catalogs do not establish availability in Azure, Bedrock, Vertex or a bank-contracted service, and they do not always expose the actual checkpoint behind an alias. Record those deployment bindings separately.[m
+[32m+[m[32mThe prefix filters are scope controls, not security classifications. Adapt them to the inventory you maintain. Provider catalogs do not establish availability in Azure, Bedrock, Vertex or a organization-contracted service, and they do not always expose the actual checkpoint behind an alias. Record those deployment bindings separately.[m
+ [m
+ ## 4. Review evidence changes[m
+ [m
+[36m@@ -198,7 +200,7 @@[m [mThis example is an editing pattern, not a new finding for any seeded model. Ente[m
+ python run_register.py --config config.yaml apply-review --file reviewed_changes.json --reviewer "Named reviewer or company identity"[m
+ ```[m
+ [m
+[31m-The review command cannot change provider/model identity, the original suggested treatment or bank-owned fields. It does not automatically refresh evidence-review dates; those dates must reflect the review actually performed. A source change acknowledged as immaterial can retain existing vendor fields. A changed vendor finding leaves a previously recorded bank decision visible with a separate reassessment indicator.[m
+[32m+[m[32mThe review command cannot change provider/model identity, the original suggested treatment or organization-owned fields. It does not automatically refresh evidence-review dates; those dates must reflect the review actually performed. A source change acknowledged as immaterial can retain existing vendor fields. A changed vendor finding leaves a previously recorded organization decision visible with a separate reassessment indicator.[m
+ [m
+ Catalog/system-card index watches not yet associated with a specific model remain visible in the watch table. Their changes may identify models that need manual registration; public pages are not scraped into invented model classifications.[m
+ [m
+[36m@@ -221,7 +223,7 @@[m [mOne observation means one published metric for one reported model and test confi[m
+ | [CyberSOCEval](https://arxiv.org/html/2509.20166v1) — Malware / Threat Intelligence | Conditional: SOC | Exact-answer accuracy and, where reported, Jaccard similarity | Keep task, input modality, denominator and implementation distinct; this does not validate an entire SOC workflow. |[m
+ | [AISI cyber ranges](https://www.aisi.gov.uk/blog/how-do-frontier-ai-agents-perform-in-multi-step-cyber-attack-scenarios) | Separate evidence | Scenario-specific mean/max progress and full-chain success | Mean progress, maximum progress and full completion are different metrics. Retain run counts, token budgets and absence of active defenders. |[m
+ [m
+[31m-Published benchmark success is **not a probability of breaching the bank**. It describes performance under the reported evaluation conditions. The deployment's permissions, data, tools, human checks, monitoring and safeguards need their own assessment. Greater offensive capability, improved defensive performance and improved prompt-injection resistance are separate properties; a higher number has different meanings across these tracks.[m
+[32m+[m[32mPublished benchmark success is **not a probability of breaching the organization**. It describes performance under the reported evaluation conditions. The deployment's permissions, data, tools, human checks, monitoring and safeguards need their own assessment. Greater offensive capability, improved defensive performance and improved prompt-injection resistance are separate properties; a higher number has different meanings across these tracks.[m
+ [m
+ Publication or leaderboard dates, actual evaluation dates and retrieval timestamps are separate fields. A new leaderboard entry may describe an older evaluation; a retrieval today does not make the experiment current. Unknown dates and exact model snapshots remain empty rather than being inferred.[m
+ [m
+[36m@@ -305,7 +307,7 @@[m [mThe example shows fields to edit, not a replacement for the full generated item.[m
+ python run_register.py --config config.yaml benchmark-review --file reviewed_benchmark_results.json --reviewer "Named reviewer or company identity"[m
+ ```[m
+ [m
+[31m-Stale review files are rejected. Accepted results do not change bank fields. A changed accepted evidence set or conditional scope can mark an earlier bank decision for reassessment; it never silently changes the bank's classification.[m
+[32m+[m[32mStale review files are rejected. Accepted results do not change organization fields. A changed accepted evidence set or conditional scope can mark an earlier organization decision for reassessment; it never silently changes the organization's classification.[m
+ [m
+ ### Read the new outputs[m
+ [m
+[36m@@ -319,18 +321,18 @@[m [mStale review files are rejected. Accepted results do not change bank fields. A c[m
+ [m
+ Each populated Coverage cell shows up to three observations in a deterministic preview, keeping each metric and configuration separate. When more are available, the cell states how many are shown. Click the cell to open its first displayed detail row; use the reported model and benchmark filters on the detail sheet to inspect all observations. The preview is not a maximum, average, ranking or combined cyber score. Percentage, fraction and count units remain distinct; approximate published counts retain that qualifier. Numeric source values remain sortable in `Benchmark Results` and `AISI Evidence`.[m
+ [m
+[31m-**Exact-ID links and unconfirmed name/version suggestions are labeled separately.** Showing a candidate's published value does not assign it to the registered model or accept it as bank evidence. Reviewed labels still do not establish an exact serving checkpoint. Rejected observations are excluded from coverage previews; pending reviews, changed sources and unavailable sources remain visible. Retained coding/SOC results are shown as **Scope off; reference only** when those tracks are disabled. AISI previews retain their scenario and metric rather than producing a universal AISI score.[m
+[32m+[m[32m**Exact-ID links and unconfirmed name/version suggestions are labeled separately.** Showing a candidate's published value does not assign it to the registered model or accept it as organization evidence. Reviewed labels still do not establish an exact serving checkpoint. Rejected observations are excluded from coverage previews; pending reviews, changed sources and unavailable sources remain visible. Retained coding/SOC results are shown as **Scope off; reference only** when those tracks are disabled. AISI previews retain their scenario and metric rather than producing a universal AISI score.[m
+ [m
+ `No linked published result` and unavailable-source messages describe coverage gaps, not zero scores. A published zero is displayed only when the source actually reports one. The JSON state retains complete observations and history; Excel and Confluence are generated views of that state. Coverage cells are generated by Python during `export` or `refresh`; editing a score directly in Excel does not update the register or recalculate these summaries.[m
+ [m
+ Some original prior/special inventory entries group several model IDs in one field. This display fix preserves those entries and the existing conservative matching rules; it does not distribute one member's score across the entire group. A result without an exact link or an existing name/version suggestion remains in the detail sheet pending an explicit mapping to an appropriate individual model record.[m
+ [m
+[31m-## 6. Record the bank decision separately[m
+[32m+[m[32m## 6. Record the organization decision separately[m
+ [m
+ Find the record ID in Excel's added `Record ID` column or exported JSON. Generate a request bound to the current state:[m
+ [m
+ ```bash[m
+[31m-python run_register.py --config config.yaml bank-template --record-id RECORD_UUID --output bank_decisions.json[m
+[32m+[m[32mpython run_register.py --config config.yaml organization-template --record-id RECORD_UUID --output organization_decisions.json[m
+ ```[m
+ [m
+ For an actual decision, set `confirm_decision` to `true`, retain the generated `expected_vendor_sha256` **and** `expected_benchmark_sha256`, and provide the decision fields in `updates`. The benchmark hash binds the reviewed, linked evidence and selected conditional scope. Do not substitute a hash from an older template.[m
+[36m@@ -339,10 +341,10 @@[m [mFor an actual decision, set `confirm_decision` to `true`, retain the generated `[m
+ {[m
+   "confirm_decision": true,[m
+   "updates": {[m
+[31m-    "Bank Classification": "Restricted",[m
+[31m-    "Bank Frontier Determination": "Within exclusion",[m
+[31m-    "Bank Rationale / Open Decision": "Apply the bank's documented definition and cite the relevant evidence.",[m
+[31m-    "Decision Owner": "Authorized bank decision owner",[m
+[32m+[m[32m    "Organization Classification": "Restricted",[m
+[32m+[m[32m    "Organization Frontier Determination": "Within exclusion",[m
+[32m+[m[32m    "Organization Rationale / Open Decision": "Apply the organization's documented definition and cite the relevant evidence.",[m
+[32m+[m[32m    "Decision Owner": "Authorized organization decision owner",[m
+     "Decision Date": "2026-11-14",[m
+     "Approval Record": "Company governance record or ticket"[m
+   }[m
+[36m@@ -352,12 +354,12 @@[m [mFor an actual decision, set `confirm_decision` to `true`, retain the generated `[m
+ This example shows the fields to edit; retain the other fields in the generated item, including both evidence hashes. A template from v1 must be regenerated before confirming a decision with the benchmark extension enabled.[m
+ [m
+ ```bash[m
+[31m-python run_register.py --config config.yaml bank-update --file bank_decisions.json --actor "Authorized operator"[m
+[32m+[m[32mpython run_register.py --config config.yaml organization-update --file organization_decisions.json --actor "Authorized operator"[m
+ ```[m
+ [m
+ `Eligible for assessment` requires `Outside exclusion` and is still not production approval. A new confirmed decision must provide its rationale, owner, date and record reference explicitly. Administrative changes to hosting, access, use, triggers or the next review date do not silently reconfirm an old decision. Changed deployment settings, vendor fields, observed catalog metadata, reviewed benchmark evidence or selected scope can therefore keep an earlier decision marked for reassessment.[m
+ [m
+[31m-Reviewer/actor strings provide attribution, not authentication. Company access controls must restrict these commands and the authoritative state. Local hashes and history help detect accidental inconsistency; they are not a tamper-proof audit service. Use controlled pipeline permissions and your existing governance approval process for enforcement. The script does not implement a complete bank policy engine.[m
+[32m+[m[32mReviewer/actor strings provide attribution, not authentication. Company access controls must restrict these commands and the authoritative state. Local hashes and history help detect accidental inconsistency; they are not a tamper-proof audit service. Use controlled pipeline permissions and your existing governance approval process for enforcement. The script does not implement a complete organization policy engine.[m
+ [m
+ ## 7. Publish to Confluence when you are ready[m
+ [m
+[36m@@ -417,7 +419,7 @@[m [mRecommended initial operation:[m
+ [m
+ 1. Schedule `refresh` daily or weekly, using an account with only the source-read access it needs.[m
+ 2. Route exit code 2, pending vendor/benchmark review counts and unmapped-result counts to the team's existing monitoring process.[m
+[31m-3. Review changed findings and model mappings, and apply the separate vendor and benchmark review files through the bank's controlled process.[m
+[32m+[m[32m3. Review changed findings and model mappings, and apply the separate vendor and benchmark review files through the organization's controlled process.[m
+ 4. Export automatically. Enable Confluence writes only after testing the destination and service identity.[m
+ [m
+ You can publish retained findings with clearly displayed monitoring warnings before every review is complete, if that is your chosen process. Publication does not approve the models. The example scheduler does not publish by default.[m
+[36m@@ -432,7 +434,7 @@[m [mRun the offline tests without any credentials:[m
+ python run_tests.py[m
+ ```[m
+ [m
+[31m-The test runner adds `src/` to its import path. Tests cover mocked HTTP behavior, pagination, evidence integrity, stale reviews, bank-field protection, decision provenance, model metadata changes, benchmark parsing and review, explicit model mapping, scope changes, safe rendering and Confluence update boundaries. The actual supplied workbook and bundled benchmark evidence have also been imported and exported locally.[m
+[32m+[m[32mThe test runner adds `src/` to its import path. Tests cover mocked HTTP behavior, pagination, evidence integrity, stale reviews, organization-field protection, decision provenance, model metadata changes, benchmark parsing and review, explicit model mapping, scope changes, safe rendering and Confluence update boundaries. The actual supplied workbook and bundled benchmark evidence have also been imported and exported locally.[m
+ [m
+ For the v1.1 release, live public benchmark snapshots were downloaded using `curl`, then parsed and validated with the package. The development environment's configured SOCKS proxy prevented HTTPX requests because its optional SOCKS dependency was absent. That means live-source retrieval was checked, but it was not a successful end-to-end HTTPX network test in that environment. If your approved company proxy uses SOCKS, install the corresponding HTTPX extra through your approved repository:[m
+ [m
+[36m@@ -453,7 +455,7 @@[m [mrun_register.py                 Direct Python entry point[m
+ run_tests.py                    Offline test entry point[m
+ config.example.yaml             Paths, source hosts, watches and publisher settings[m
+ requirements-tested.txt         Tested direct dependency versions[m
+[31m-src/frontier_register/core.py   State, review, discovery merge and bank decisions[m
+[32m+[m[32msrc/frontier_register/core.py   State, review, discovery merge and organization decisions[m
+ src/frontier_register/collectors.py  Public source and vendor catalog readers[m
+ src/frontier_register/benchmarks.py  Observation state, mapping, review and decision binding[m
+ src/frontier_register/benchmark_collectors.py  Published core benchmark collectors[m
+[1mdiff --git a/azure-pipelines.example.yml b/azure-pipelines.example.yml[m
+[1mindex 311915e..74cf8b9 100644[m
+[1m--- a/azure-pipelines.example.yml[m
+[1m+++ b/azure-pipelines.example.yml[m
+[36m@@ -12,8 +12,8 @@[m [mschedules:[m
+ pool:[m
+   name: YourApprovedSelfHostedPool[m
+ variables:[m
+[31m-  FrontierPython: /opt/bank-frontier-register/.venv/bin/python[m
+[31m-  FrontierConfigPath: /srv/bank-frontier-register/config.yaml[m
+[32m+[m[32m  FrontierPython: /opt/organization-frontier-register/.venv/bin/python[m
+[32m+[m[32m  FrontierConfigPath: /srv/organization-frontier-register/config.yaml[m
+ steps:[m
+   - checkout: self[m
+   - bash: |[m
+[1mdiff --git a/data/Bank_Frontier_Model_Register_2026-11-14.xlsx b/data/Bank_Frontier_Model_Register_2026-11-14.xlsx[m
+[1mdeleted file mode 100644[m
+[1mindex c243aad..0000000[m
+Binary files a/data/Bank_Frontier_Model_Register_2026-11-14.xlsx and /dev/null differ
+[1mdiff --git a/data/Organization_Frontier_Model_Register_2026-11-14.xlsx b/data/Organization_Frontier_Model_Register_2026-11-14.xlsx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..55503c2[m
+Binary files /dev/null and b/data/Organization_Frontier_Model_Register_2026-11-14.xlsx differ
+[1mdiff --git a/data/benchmark_evidence_seed.json b/data/benchmark_evidence_seed.json[m
+[1mindex d27be13..747eaa6 100644[m
+[1m--- a/data/benchmark_evidence_seed.json[m
+[1m+++ b/data/benchmark_evidence_seed.json[m
+[36m@@ -2,7 +2,7 @@[m
+   "schema_version": 1,[m
+   "as_of": "2026-11-14",[m
+   "coverage_notes": [[m
+[31m-    "A curated historical evidence seed, not an assertion that every latest model has public scores. Records need review before bank interpretation.",[m
+[32m+[m[32m    "A curated historical evidence seed, not an assertion that every latest model has public scores. Records need review before organization interpretation.",[m
+     "AISI observations use distinct studies and budgets. The selected official range studies do not report a Google model; absence is not a zero result.",[m
+     "Secure Code and CyberSOCEval records remain conditional on coding and SOC scope. The Inspect adaptation is a small implementation-validation sample, not a reproduction of original-paper results.",[m
+     "The original CyberSOCEval threat-intelligence figure has an unresolved denominator discrepancy against its paper text. Preserve the published values and flag the discrepancy before comparison.",[m
+[1mdiff --git a/data/benchmark_results_seed.json b/data/benchmark_results_seed.json[m
+[1mindex 291bc1c..7efd2db 100644[m
+[1m--- a/data/benchmark_results_seed.json[m
+[1m+++ b/data/benchmark_results_seed.json[m
+[36m@@ -11538,7 +11538,7 @@[m
+   "notes": [[m
+     "Actual published numerical results; not a new execution of any benchmark.",[m
+     "Only Anthropic, OpenAI and Google single-model results included. Hidden rows and multi-model ensembles excluded.",[m
+[31m-    "A source check confirms publication, not bank approval or comparability. Exact model mappings and bank decisions remain review steps.",[m
+[32m+[m[32m    "A source check confirms publication, not organization approval or comparability. Exact model mappings and organization decisions remain review steps.",[m
+     "The original AgentDojo HTML article is not packaged. Its factual table is preserved with a separate extraction hash and the original source hash."[m
+   ][m
+ }[m
+[1mdiff --git a/docs/GITHUB_SETUP.md b/docs/GITHUB_SETUP.md[m
+[1mindex eb3a6ac..a45817e 100644[m
+[1m--- a/docs/GITHUB_SETUP.md[m
+[1m+++ b/docs/GITHUB_SETUP.md[m
+[36m@@ -58,7 +58,7 @@[m [mIf the repository name already exists, stop and inspect it before choosing a dif[m
+ [m
+ ## Find the populated workbook[m
+ [m
+[31m-Open `examples/first_run_model_register.xlsx`. The **Benchmark Results** worksheet contains the published benchmark observations; **AISI Evidence** contains the separate cyber-range findings. `data/Bank_Frontier_Model_Register_2026-11-14.xlsx` is the original input workbook.[m
+[32m+[m[32mOpen `examples/first_run_model_register.xlsx`. The **Benchmark Results** worksheet contains the published benchmark observations; **AISI Evidence** contains the separate cyber-range findings. `data/Organization_Frontier_Model_Register_2026-11-14.xlsx` is the original input workbook.[m
+ [m
+ ## Keep operational files outside version control[m
+ [m
+[1mdiff --git a/examples/VALIDATION.txt b/examples/VALIDATION.txt[m
+[1mindex a0dee07..85ebc78 100644[m
+[1m--- a/examples/VALIDATION.txt[m
+[1m+++ b/examples/VALIDATION.txt[m
+[36m@@ -28,7 +28,7 @@[m [mhas an internal link to a nonempty detail row. Native Microsoft Excel interactio[m
+ was not executed in this Linux environment.[m
+ [m
+ An existing-state export completed successfully and left work/register.json[m
+[31m-byte-for-byte unchanged. All mappings, review states, conditional scope and bank[m
+[32m+[m[32mbyte-for-byte unchanged. All mappings, review states, conditional scope and organization[m
+ decisions are preserved. The v1.1.1 patch requires export, not init or seed reimport.[m
+ [m
+ Bundled evidence:[m
+[36m@@ -61,7 +61,7 @@[m [muse attributed imports; supplementary-source monitoring flags changed documents.[m
+ [m
+ The tests cover source parsing and filtering, configuration-specific identities,[m
+ missing versus zero, provider and mapping boundaries, source integrity, unavailable[m
+[31m-sources, stale/forged reviews, history retention, conditional scope, bank decision[m
+[32m+[m[32msources, stale/forged reviews, history retention, conditional scope, organization decision[m
+ binding, HTML/Excel injection and existing Confluence publishing behavior. Focused[m
+ in-memory checks also verified raw-source acknowledgments and hashes, rejection,[m
+ stale queue handling and all four coding/SOC HTML combinations. Those checks left[m
+[36m@@ -80,4 +80,4 @@[m [mof benchmark workloads or live Confluence update was performed. The package can[m
+ generate and publish managed Confluence content; its destination and identity must[m
+ be configured and checked in the company's environment. Publishing defaults to a[m
+ dry run. Local hashes/history are not a tamper-proof audit service. The script does[m
+[31m-not implement the bank's complete policy or autonomously approve models.[m
+[32m+[m[32mnot implement the organization's complete policy or autonomously approve models.[m
+[1mdiff --git a/examples/first_run_model_register.xlsx b/examples/first_run_model_register.xlsx[m
+[1mindex fcbd493..8574f3b 100644[m
+Binary files a/examples/first_run_model_register.xlsx and b/examples/first_run_model_register.xlsx differ
+[1mdiff --git a/examples/first_run_register_preview.html b/examples/first_run_register_preview.html[m
+[1mindex bce569e..2c6f5b2 100644[m
+[1m--- a/examples/first_run_register_preview.html[m
+[1m+++ b/examples/first_run_register_preview.html[m
+[36m@@ -1,12 +1,12 @@[m
+ <!doctype html><html lang="en"><head><meta charset="utf-8"><title>Frontier model register</title><style>body{font:15px/1.5 Arial,sans-serif;color:#243d50;margin:32px}h1,h2,h3{color:#173952}table{border-collapse:collapse;width:100%;margin:16px 0 32px}th,td{border:1px solid #d9e2e9;padding:8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#173952;color:white}tr:nth-child(even){background:#f1f6fa}a{color:#145d92}</style></head><body><h1>Frontier model register</h1>[m
+ <p>State version 4. Updated 2026-11-14T16:57:17Z. 23 current model records.</p>[m
+[31m-<p><strong>Vendor evidence and bank decisions are separate.</strong> Pending classification is not permission to onboard. Source changes and failures are shown alongside retained findings.</p>[m
+[32m+[m[32m<p><strong>Vendor evidence and organization decisions are separate.</strong> Pending classification is not permission to onboard. Source changes and failures are shown alongside retained findings.</p>[m
+ <h2>Anthropic</h2>[m
+[31m-<table><tbody><tr><th>Model</th><th>Version</th><th>Exact ID</th><th>Vendor cyber finding</th><th>Evidence basis</th><th>Bank classification</th><th>Bank frontier determination</th><th>Monitoring</th></tr><tr><td>Claude Fable</td><td>5.2</td><td>claude-fable-5-2</td><td>No formal named cyber tier in reviewed material.</td><td>Release summary and model docs. Full system card linked, not reviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Opus</td><td>5.5</td><td>claude-opus-5-5</td><td>No formal named cyber tier. CVP tests demonstrate configuration-dependent behavior.</td><td>Vendor summary and CVP tests. Full card unreviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Sonnet</td><td>5.5</td><td>claude-sonnet-5-5</td><td>No formal named cyber tier. CVP is an access / safeguard program.</td><td>Vendor summary with comparative evidence. Full card unreviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Haiku (small-model tier)</td><td>5.5</td><td>claude-haiku-5-5</td><td>No formal named cyber tier in reviewed material.</td><td>Vendor summary and automated testing. Full card unreviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Mythos</td><td>5.2</td><td>claude-mythos-5-2</td><td>Stronger cyber engineering reported. No formal named tier assigned.</td><td>Release summary and model docs. Full system card linked, not reviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr></tbody></table>[m
+[32m+[m[32m<table><tbody><tr><th>Model</th><th>Version</th><th>Exact ID</th><th>Vendor cyber finding</th><th>Evidence basis</th><th>Organization classification</th><th>Organization frontier determination</th><th>Monitoring</th></tr><tr><td>Claude Fable</td><td>5.2</td><td>claude-fable-5-2</td><td>No formal named cyber tier in reviewed material.</td><td>Release summary and model docs. Full system card linked, not reviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Opus</td><td>5.5</td><td>claude-opus-5-5</td><td>No formal named cyber tier. CVP tests demonstrate configuration-dependent behavior.</td><td>Vendor summary and CVP tests. Full card unreviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Sonnet</td><td>5.5</td><td>claude-sonnet-5-5</td><td>No formal named cyber tier. CVP is an access / safeguard program.</td><td>Vendor summary with comparative evidence. Full card unreviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Haiku (small-model tier)</td><td>5.5</td><td>claude-haiku-5-5</td><td>No formal named cyber tier in reviewed material.</td><td>Vendor summary and automated testing. Full card unreviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Claude Mythos</td><td>5.2</td><td>claude-mythos-5-2</td><td>Stronger cyber engineering reported. No formal named tier assigned.</td><td>Release summary and model docs. Full system card linked, not reviewed.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr></tbody></table>[m
+ <h2>OpenAI</h2>[m
+[31m-<table><tbody><tr><th>Model</th><th>Version</th><th>Exact ID</th><th>Vendor cyber finding</th><th>Evidence basis</th><th>Bank classification</th><th>Bank frontier determination</th><th>Monitoring</th></tr><tr><td>GPT-6 Astra</td><td>6</td><td>gpt-6-astra</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct model-specific system card.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT Sol</td><td>6.1</td><td>gpt-6.1-sol</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct model addendum. Safeguard inheritance is separately stated.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT Sol</td><td>6</td><td>gpt-6-sol</td><td>PF2: High. Below Critical for October 7 revision. September also High.</td><td>Direct revision-specific assessments. API alias mapping remains unresolved.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-6.1 Terra</td><td>6.1</td><td>gpt-6.1-terra</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct model-specific addendum.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-6 Luna</td><td>6</td><td>gpt-6-luna</td><td>PF2: High on October 29. Below-Critical boundary only verified for October 7.</td><td>Current direct cyber / biochemical findings. Earlier revision used for historical context only.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-5.4 mini</td><td>5.4 mini; 2026-03-17 snapshot</td><td>gpt-5.4-mini-2026-03-17</td><td>PF2: Below High. FGF tier not separately verified.</td><td>Direct mini appendix. API documentation confirms dated snapshot.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-6 Cyber</td><td>6 Cyber</td><td>gpt-6-cyber</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct specialized-model system card.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-5.6 Cyber</td><td>5.6 Cyber</td><td>gpt-5.6-cyber</td><td>PF2: High and below Critical. FGF tier not separately verified.</td><td>Direct cyber finding in announcement, corroborated by API safety docs.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr></tbody></table>[m
+[32m+[m[32m<table><tbody><tr><th>Model</th><th>Version</th><th>Exact ID</th><th>Vendor cyber finding</th><th>Evidence basis</th><th>Organization classification</th><th>Organization frontier determination</th><th>Monitoring</th></tr><tr><td>GPT-6 Astra</td><td>6</td><td>gpt-6-astra</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct model-specific system card.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT Sol</td><td>6.1</td><td>gpt-6.1-sol</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct model addendum. Safeguard inheritance is separately stated.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT Sol</td><td>6</td><td>gpt-6-sol</td><td>PF2: High. Below Critical for October 7 revision. September also High.</td><td>Direct revision-specific assessments. API alias mapping remains unresolved.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-6.1 Terra</td><td>6.1</td><td>gpt-6.1-terra</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct model-specific addendum.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-6 Luna</td><td>6</td><td>gpt-6-luna</td><td>PF2: High on October 29. Below-Critical boundary only verified for October 7.</td><td>Current direct cyber / biochemical findings. Earlier revision used for historical context only.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-5.4 mini</td><td>5.4 mini; 2026-03-17 snapshot</td><td>gpt-5.4-mini-2026-03-17</td><td>PF2: Below High. FGF tier not separately verified.</td><td>Direct mini appendix. API documentation confirms dated snapshot.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-6 Cyber</td><td>6 Cyber</td><td>gpt-6-cyber</td><td>PF2: Critical. FGF cyber tier not separately verified.</td><td>Direct specialized-model system card.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>GPT-5.6 Cyber</td><td>5.6 Cyber</td><td>gpt-5.6-cyber</td><td>PF2: High and below Critical. FGF tier not separately verified.</td><td>Direct cyber finding in announcement, corroborated by API safety docs.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr></tbody></table>[m
+ <h2>Google</h2>[m
+[31m-<table><tbody><tr><th>Model</th><th>Version</th><th>Exact ID</th><th>Vendor cyber finding</th><th>Evidence basis</th><th>Bank classification</th><th>Bank frontier determination</th><th>Monitoring</th></tr><tr><td>Gemini 4 Carbon</td><td>4 Carbon</td><td>gemini-4-carbon</td><td>Cyber CCL cannot be ruled out. Inherited from Argon.</td><td>Inherited findings after Material Capability Change comparison. Additional mitigation testing.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Argon</td><td>4 Argon</td><td>gemini-4-argon</td><td>Cyber uplift CCL cannot be ruled out.</td><td>Direct critical-capability assessment summarized in model card.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Hydrogen</td><td>4 Hydrogen</td><td>gemini-4-hydrogen</td><td>Cyber CCL not reached. Cyber alert threshold reached.</td><td>Targeted cyber / biology tests. Inherited findings elsewhere after no Material Capability Change.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash</td><td>3.8</td><td>gemini-3.8-flash</td><td>Vendor considers T/CCLs unlikely to be reached.</td><td>Inherited / comparative evidence from Gemini 3.7 Flash.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash</td><td>3.6</td><td>gemini-3.6-flash</td><td>Targeted testing: below cyber CCL.</td><td>Targeted cyber tests plus inherited / comparative evidence elsewhere.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash-Lite</td><td>3.5</td><td>gemini-3.5-flash-lite</td><td>Vendor considers CCLs unlikely to be reached.</td><td>Inherited / comparative evidence from Gemini 3.1 Pro.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash-Lite</td><td>3.1</td><td>gemini-3.1-flash-lite</td><td>Vendor considers CCLs unlikely to be reached.</td><td>Inherited / comparative evidence from Gemini 3.1 Pro with Deep Think.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Carbon for cyber</td><td>4 Carbon Cyber Permissive</td><td>gemini-4-carbon-cyber-permissive</td><td>Exact-variant CCL finding not established in reviewed documentation.</td><td>Product / access documentation only. No verified variant-specific capability decision.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Argon Cyber Permissive</td><td>4 Argon Cyber Permissive</td><td>gemini-4-argon-cyber-permissive</td><td>Exact-variant CCL finding not established in reviewed documentation.</td><td>Product / access documentation only. No verified variant-specific capability decision.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash Cyber</td><td>3.8 Flash Cyber</td><td>gemini-3.8-flash-cyber</td><td>Exact-variant CCL finding not established in reviewed documentation.</td><td>Product / access documentation only. No verified variant-specific capability decision.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr></tbody></table>[m
+[32m+[m[32m<table><tbody><tr><th>Model</th><th>Version</th><th>Exact ID</th><th>Vendor cyber finding</th><th>Evidence basis</th><th>Organization classification</th><th>Organization frontier determination</th><th>Monitoring</th></tr><tr><td>Gemini 4 Carbon</td><td>4 Carbon</td><td>gemini-4-carbon</td><td>Cyber CCL cannot be ruled out. Inherited from Argon.</td><td>Inherited findings after Material Capability Change comparison. Additional mitigation testing.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Argon</td><td>4 Argon</td><td>gemini-4-argon</td><td>Cyber uplift CCL cannot be ruled out.</td><td>Direct critical-capability assessment summarized in model card.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Hydrogen</td><td>4 Hydrogen</td><td>gemini-4-hydrogen</td><td>Cyber CCL not reached. Cyber alert threshold reached.</td><td>Targeted cyber / biology tests. Inherited findings elsewhere after no Material Capability Change.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash</td><td>3.8</td><td>gemini-3.8-flash</td><td>Vendor considers T/CCLs unlikely to be reached.</td><td>Inherited / comparative evidence from Gemini 3.7 Flash.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash</td><td>3.6</td><td>gemini-3.6-flash</td><td>Targeted testing: below cyber CCL.</td><td>Targeted cyber tests plus inherited / comparative evidence elsewhere.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash-Lite</td><td>3.5</td><td>gemini-3.5-flash-lite</td><td>Vendor considers CCLs unlikely to be reached.</td><td>Inherited / comparative evidence from Gemini 3.1 Pro.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash-Lite</td><td>3.1</td><td>gemini-3.1-flash-lite</td><td>Vendor considers CCLs unlikely to be reached.</td><td>Inherited / comparative evidence from Gemini 3.1 Pro with Deep Think.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Carbon for cyber</td><td>4 Carbon Cyber Permissive</td><td>gemini-4-carbon-cyber-permissive</td><td>Exact-variant CCL finding not established in reviewed documentation.</td><td>Product / access documentation only. No verified variant-specific capability decision.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini 4 Argon Cyber Permissive</td><td>4 Argon Cyber Permissive</td><td>gemini-4-argon-cyber-permissive</td><td>Exact-variant CCL finding not established in reviewed documentation.</td><td>Product / access documentation only. No verified variant-specific capability decision.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr><tr><td>Gemini Flash Cyber</td><td>3.8 Flash Cyber</td><td>gemini-3.8-flash-cyber</td><td>Exact-variant CCL finding not established in reviewed documentation.</td><td>Product / access documentation only. No verified variant-specific capability decision.</td><td>Pending classification</td><td>Not determined</td><td>Not checked by automation</td></tr></tbody></table>[m
+ <h2>Published cyber benchmark evidence</h2>[m
+ <p>305 benchmark observations; 52 AISI findings. Coding tracks: conditional, not enabled. SOC tracks: conditional, not enabled.</p>[m
+ <p>Each score belongs to its reported model, agent and evaluation configuration. Pending evidence is displayed with its review status. Missing results are not zero. Exact checkpoint correspondence is not inferred from a family name.</p>[m
+[36m@@ -36,52 +36,52 @@[m
+ <table><tbody><tr><th>Reported model</th><th>Scenario</th><th>Metric</th><th>Value</th><th>Runs</th><th>Budget</th><th>Evaluated</th><th>Published</th><th>Review / mapping</th><th>Source</th></tr><tr><td>Anthropic: Claude Mythos Preview</td><td>The Last Ones</td><td>full_chain_success_rate</td><td>30%</td><td>10</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>—</td><td>pending; Unmapped reported model</td><td><a href="https://www.aisi.gov.uk/blog/our-evaluation-of-claude-mythos-previews-cyber-capabilities">https://www.aisi.gov.uk/blog/our-evaluation-of-claude-mythos-previews-cyber-capabilities</a></td></tr><tr><td>Anthropic: Claude Mythos Preview</td><td>The Last Ones</td><td>mean_steps_completed</td><td>22 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>—</td><td>pending; Unmapped reported model</td><td><a href="https://www.aisi.gov.uk/blog/our-evaluation-of-claude-mythos-previews-cyber-capabilities">https://www.aisi.gov.uk/blog/our-evaluation-of-claude-mythos-previews-cyber-capabilities</a></td></tr><tr><td>Anthropic: Claude Opus 4.6</td><td>The Last Ones</td><td>mean_steps_completed</td><td>16 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>—</td><td>pending; Unmapped reported model</td><td><a href="https://www.aisi.gov.uk/blog/our-evaluation-of-claude-mythos-previews-cyber-capabilities">https://www.aisi.gov.uk/blog/our-evaluation-of-claude-mythos-previews-cyber-capabilities</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>1 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>1 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>11 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>9 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0.6 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0.1 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>The Last Ones</td><td>mean_steps_completed</td><td>11 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.5</td><td>The Last Ones</td><td>mean_steps_completed</td><td>7.6 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>2 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>1 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>22 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>11 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>1.4 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0.1 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>The Last Ones</td><td>mean_steps_completed</td><td>15.6 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Opus 4.6</td><td>The Last Ones</td><td>mean_steps_completed</td><td>9.8 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 3.7</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 3.7</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>8 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 3.7</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 3.7</td><td>The Last Ones</td><td>mean_steps_completed</td><td>5.8 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>0 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>11 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>8 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>The Last Ones</td><td>mean_steps_completed</td><td>9.4 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>Anthropic: Sonnet 4.5</td><td>The Last Ones</td><td>mean_steps_completed</td><td>6.1 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>0 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>11 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>13 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>The Last Ones</td><td>mean_steps_completed</td><td>9.8 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.1 Codex</td><td>The Last Ones</td><td>mean_steps_completed</td><td>8 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>3 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>1 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>11 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>8 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>1.2 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0.1 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>The Last Ones</td><td>mean_steps_completed</td><td>11 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: 5.3 Codex</td><td>The Last Ones</td><td>mean_steps_completed</td><td>7.2 steps</td><td>5</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: GPT-4o</td><td>Cooling Tower</td><td>maximum_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: GPT-4o</td><td>The Last Ones</td><td>maximum_steps_completed</td><td>3 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: GPT-4o</td><td>Cooling Tower</td><td>mean_steps_completed</td><td>0 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: GPT-4o</td><td>The Last Ones</td><td>mean_steps_completed</td><td>1.7 steps</td><td>10</td><td>{&quot;total_token_limit&quot;: 10000000}</td><td>—</td><td>2026-03-17</td><td>pending; Unmapped reported model</td><td><a href="https://arxiv.org/pdf/2603.11214v3">https://arxiv.org/pdf/2603.11214v3</a></td></tr><tr><td>OpenAI: GPT-5.5</td><td>The Last Ones</td><td>full_chain_success_rate</td><td>20%</td><td>10</td><td>{&quot;total_token_limit&quot;: 100000000}</td><td>—</td><td>—</td><td>pending; Unmapped reported model</td><td><a href="https://www.aisi.gov.uk/blog/our-evaluation-of-openais-gpt-5-5-cyber-capabilities">https://www.aisi.gov.uk/blog/our-evaluation-of-openais-gpt-5-5-cyber-capabilities</a></td></tr></tbody></table>[m
+ <h2>Current-model evidence and decision details</h2>[m
+ <h3>Anthropic: claude-fable-5-2</h3>[m
+[31m-<table><tbody><tr><th>Field</th><th>Recorded value</th></tr><tr><td>Model Usage</td><td>General</td></tr><tr><td>Model Family</td><td>Claude Fable</td></tr><tr><td>Version</td><td>5.2</td></tr><tr><td>Vendor-stated Strengths</td><td>Demanding reasoning, extended agent tasks, multistep research, and turning analysis into completed documents, spreadsheets, or presentations.</td></tr><tr><td>Lifecycle</td><td>Active; latest Fable</td></tr><tr><td>Access / Deployment Notes</td><td>Fable and Mythos share an underlying model; Fable includes stronger cyber and biology safeguards. Covered Model requiring 30-day retention unless Anthropic expressly authorizes ZDR.</td></tr><tr><td>Bank Classification</td><td>Pending classification</td></tr><tr><td>Official Sources (URL)</td><td><a href="https://platform.claude.com/docs/en/models/fable-5-2/overview">https://platform.claude.com/docs/en/models/fable-5-2/overview</a></td></tr><tr><td>Inventory Verified On</td><td>2026-11-14</td></tr><tr><td>Bank Host / Endpoint / Region</td><td>To be specified</td></tr><tr><td>Bank Access / Safeguard Tier</td><td>To be specified</td></tr><tr><td>Framework / Version / Effective Date</td><td>RSP v3.4. Effective 2026-07-08.</td></tr><tr><td>Risk Domains / Coverage</td><td>Cybersecurity; chemical/biological; autonomous behavior; AI R&amp;D</td></tr><tr><td>Vendor Frontier Position</td><td>Positioned above Opus 5.5 for demanding technical work.</td></tr><tr><td>Native Cyber Finding</td><td>No formal named cyber tier in reviewed material.</td></tr><tr><td>Other Native Findings</td><td>Vendor judges high-stakes misalignment risk low. CB / AI-R&amp;D threshold findings unresolved.</td></tr><tr><td>Threshold Meaning / Reference</td><td>RSP34. Domain findings and ASLs are distin
