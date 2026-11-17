@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0 — 16 November 2026
+
+### Evidence-bound model identity reconciliation
+
+- Added a separate reviewed identity relationship store (`work/identity.json`) and deterministic name-based suggestions between Mistral API offerings and curated Mistral Hugging Face repositories.
+- Added `identity-status`, `identity-suggest`, `identity-template`, `identity-review`, and `identity-export` commands; manual linking supports any two observed candidates or existing register records.
+- Introduced typed pair relationships (`same_family`, `same_model_version`, `hosted_offering_of`, `exact_checkpoint`), review attribution, substantive evidence requirements, explicit negative/revocation decisions and bounded audit/history.
+- Linked decisions are bound to both source evidence digests. Changes invalidate effective linkage and reopen review; no transitive linking, model approval or benchmark propagation.
+- Added two Excel worksheets plus identity JSON, source/review integrity tests, and an offline end-to-end CLI regression test.
+- This is additive to v1.2.0 intelligence and existing organization state; no initialization or evidence reimport required.
+
 ## 1.2.0 — 16 November 2026
 
 ### Vendor and third-party model intelligence — discovery phase
