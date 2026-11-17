@@ -1,4 +1,4 @@
-# Frontier model register automation — v1.4.0
+# Frontier model register automation — v1.5.0
 
 Terminology update: commands now use organization-template and organization-update; decision fields and saved-state keys use Organization / organization. Existing state and review files from earlier releases require a deliberate migration before use. Preserve the original state and audit history; do not perform a blind text replacement on operational JSON.
 
@@ -9,6 +9,7 @@ Terminology update: commands now use organization-template and organization-upda
 - **Python entry point:** [run_register.py](run_register.py). Installation and refresh instructions follow below.
 - **Private GitHub setup:** [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
 - **Model Identity Reconciliation:** [docs/IDENTITY.md](docs/IDENTITY.md) — conservative suggestions, reviewer-confirmed cross-source links, and stale-evidence handling.
+- **Azure Foundry Deployment Intelligence:** [docs/FOUNDRY.md](docs/FOUNDRY.md) — read-only ARM/project deployment inventory, model identity suggestions, changes and governance screening.
 
 Version 1.1.1 fixes the **Benchmark Coverage** worksheet: populated cells now show published values, metrics, test settings and mapping/review status, with links to the detailed evidence. Version 1.1.0 showed counts and status messages only. Regenerate an existing register with `export` after updating the code; do not run `init` again.
 
@@ -208,6 +209,23 @@ Start-Process .\out\model_register.xlsx
 ```
 
 The normal Excel export gains **Vendor Intelligence**, **Intelligence Events**, and **Intelligence Sources** worksheets after the first intelligence refresh. Review candidates through `out/intelligence_review_queue.json` and `intelligence-review`; an acknowledgement of observed metadata is **not** a frontier-model approval. Unavailable/partial API results never mean a model retired or disappeared. Cross-provider model/alias reconciliation is not automatic.
+
+## Azure Foundry Deployment Intelligence (v1.5)
+
+Version 1.5 adds read-only inventory for configured Azure Cognitive Services/Foundry accounts, subscriptions and Foundry project endpoints. It uses Microsoft Entra ID via `azure-identity`; it does **not** perform inference, alter cloud resources, modify the model register or approve an application.
+
+Collection is **disabled by default**. Read [the deployment guide](docs/FOUNDRY.md), merge a single `foundry:` block from `config.example.yaml` into your existing local `config.yaml`, and choose approved scope(s). Do not run `init` again.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r .\requirements-tested.txt
+az login --tenant <approved-tenant-id>
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml foundry-refresh
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml foundry-status
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml identity-suggest
+Start-Process .\out\model_register.xlsx
+```
+
+The generated Excel includes **Foundry Deployments**, **Deployment Intelligence Events**, **Foundry Sources** and **Foundry Screening**. Cross-source matches remain suggestions or evidence-bound reviewer decisions. A matched deployment name does not establish checkpoint identity, data processing geography, actual application use or bank policy compliance. The screening view highlights potential concerns for investigation but never automatically marks a deployment compliant or in violation.
 
 ## What is automated
 

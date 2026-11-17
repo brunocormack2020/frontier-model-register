@@ -109,6 +109,18 @@ intelligence:
         prefixes: [gpt-oss]
         max_results: 10
 
+# Read-only Azure Foundry inventory, disabled until an approved scope is set.
+foundry:
+  enabled: false
+  subscriptions: []  # Azure subscription UUIDs
+  accounts: []       # ARM account resource IDs
+  projects: []       # https://<resource>.services.ai.azure.com/api/projects/<name>
+  timeout_seconds: 20
+  max_pages: 25
+  max_accounts: 100
+  max_deployments: 1500
+  max_response_bytes: 3000000
+
 confluence:
   enabled: false
   mode: cloud

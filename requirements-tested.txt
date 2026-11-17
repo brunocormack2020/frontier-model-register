@@ -4,3 +4,4 @@ httpx==0.28.1
 openpyxl==3.1.5
 PyYAML==6.0.3
 pypdf==6.21.4
+azure-identity==1.27.0

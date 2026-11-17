@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.0 — 17 November 2026
+
+### Read-only Azure Foundry deployment intelligence
+
+- Added Entra-backed GET-only ARM subscription/account deployment discovery (2025-06-01) and Foundry project deployment discovery (v1).
+- Retained model name/version, publisher/format provenance, SKU, resource region, upgrade policy, and evidence history without asserting processing location or checkpoint identity.
+- Added bounded pagination with token-host/path restrictions, explicit scope selection, source-failure retention, and incomplete-scan reporting.
+- Added separate `work/foundry.json`, source/changes JSON, Foundry Deployments, Deployment Intelligence Events and Foundry Sources Excel views.
+- Extended identity matching with conservative Foundry-to-register/developer suggestions; conflicting versions cannot produce automatic suggestions.
+- Added read-only Foundry Screening for potential restricted-model exposure without issuing automated compliance or model-approval decisions.
+- Added Foundry CLI commands, documentation and offline regression tests. No reinitialization or existing register-state migration is required.
+
 ## 1.4.0 — 16 November 2026
 
 ### Multi-source identity matching and explainable no-match reporting

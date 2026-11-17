@@ -56,7 +56,7 @@ def save_state(path:Path,state:dict) -> None:
     _atomic_json(Path(path),state)
 
 
-def node_inventory(intelligence:dict, register:dict) -> dict:
+def node_inventory(intelligence:dict, register:dict, foundry:dict|None=None) -> dict:
     """Keep provider catalogue claims separate from registered model evidence."""
     nodes={}
     for key,c in intelligence.get("candidates",{}).items():
@@ -81,12 +81,32 @@ def node_inventory(intelligence:dict, register:dict) -> dict:
              "source_type":"organization_register","evidence_sha256":digest(fields),
              "review_status":"registered_not_approved_by_reconciliation",
              "source_url":None,"details":fields}
+    # A Foundry account/project deployment is an observed *hosting* record.
+    # Never infer its underlying checkpoint or organization eligibility.
+    for key, deployment in (foundry or {}).get("deployments", {}).items():
+        node_id = f"foundry:{key}"
+        fields = {k: deployment.get(k) for k in (
+            "model_name", "model_version", "publisher", "publisher_basis", "model_format",
+            "deployment_name", "source_kind", "resource_id", "project_endpoint", "sku_name",
+            "resource_region", "version_upgrade_option", "observation_status")}
+        if not isinstance(deployment.get("evidence_sha256"), str):
+            raise IntelligenceError("Invalid Foundry deployment evidence for reconciliation")
+        nodes[node_id] = {"node_id": node_id, "kind": "foundry_deployment",
+            "label": f"{deployment.get('deployment_name')}: {deployment.get('model_name')}",
+            "provider": deployment.get("publisher"), "source_type": "foundry_deployment",
+            "evidence_sha256": deployment["evidence_sha256"],
+            "review_status": "deployment_observed_not_approved",
+            "observation_status": deployment.get("observation_status"),
+            "source_url": deployment.get("source_url"), "details": fields}
     return nodes
 
 
 def snapshot(nodes:dict,identity_state:dict) -> str:
     """Retrieval times and unrelated organization/benchmark edits do not invalidate queues."""
-    return digest({"nodes":{k:v["evidence_sha256"] for k,v in sorted(nodes.items())},
+    return digest({"nodes":{k: ({"sha":v["evidence_sha256"],
+                                "observation_status":v.get("observation_status")}
+                               if v.get("kind")=="foundry_deployment" else v["evidence_sha256"])
+                            for k,v in sorted(nodes.items())},
                    "identity_state_version":identity_state["state_version"],
                    "links":{k:v.get("updated_at") for k,v in sorted(identity_state["links"].items())}})
 
@@ -113,6 +133,11 @@ _PUBLISHER_DEVELOPERS = {
 }
 _KNOWN_DEVELOPERS = frozenset(_PUBLISHER_DEVELOPERS.values()) | frozenset(("Anthropic",))
 _MIN_MATCH_CHARS = 5
+_FOUNDRY_PUBLISHERS = {
+    "openai": "OpenAI", "mistral ai": "Mistral", "mistral": "Mistral",
+    "xai": "xAI", "anthropic": "Anthropic", "google": "Google",
+    "meta": "Meta", "deepseek": "DeepSeek", "alibaba": "Qwen",
+}
 _ROLE_PAIRS = (("developer_api", "huggingface_repository"),
                ("developer_api", "organization_register"),
                ("organization_register", "huggingface_repository"))
@@ -125,6 +150,8 @@ def _developer(node: dict) -> str | None:
     if node.get("source_type") in ("developer_api", "organization_register"):
         name = node.get("provider")
         return name if name in _KNOWN_DEVELOPERS else None
+    if node.get("source_type") == "foundry_deployment":
+        return _FOUNDRY_PUBLISHERS.get(str(node.get("provider") or "").lower())
     return None
 
 
@@ -148,6 +175,8 @@ def _name_forms(node: dict) -> dict:
         if details.get("repository_id") and node.get("label") != details["repository_id"]:
             return {"primary": "", "composite": "", "aliases": ()}
         primary = full.split("/", 1)[1] if isinstance(full, str) and "/" in full else ""
+    elif kind == "foundry_deployment":
+        primary = details.get("model_name")
     elif kind == "organization_register":
         primary = details.get("Exact Model ID") or node.get("label")
         # Google's model-resource prefix is a documented identifier wrapper;
@@ -160,6 +189,12 @@ def _name_forms(node: dict) -> dict:
     if not _matchable_name(primary):
         primary = ""
     composite = ""
+    if kind == "foundry_deployment":
+        version = details.get("model_version")
+        if isinstance(version, str) and version.strip():
+            composite = _norm(str(details.get("model_name")) + "-" + version)
+        if not _matchable_name(composite) or composite == primary:
+            composite = ""
     if kind == "organization_register":
         family, version = details.get("Model Family"), details.get("Version")
         if (isinstance(family, str) and family.strip() and
@@ -257,9 +292,64 @@ def _matching_candidates(nodes: dict):
     return [entry for _, entry in sorted(matches.values(), key=lambda x: x[1]["pair_id"])]
 
 
+def _foundry_suggestions(nodes: dict) -> list[dict]:
+    """Review-only deployment-to-model hints; name + declared version, never checkpoint."""
+    foundry_nodes = [n for n in nodes.values() if n.get("source_type") == "foundry_deployment"
+                     and n.get("observation_status") == "observed"]
+    counterparts = [n for n in nodes.values() if n.get("source_type") in (
+        "developer_api", "huggingface_repository", "organization_register")]
+    index = defaultdict(list)
+    for node in counterparts:
+        developer = _developer(node)
+        forms = _name_forms(node)
+        if developer and forms["primary"]:
+            index[(developer, forms["primary"])].append(node)
+            if forms["composite"]:
+                index[(developer, forms["composite"])].append(node)
+    result = {}
+    for deployment in sorted(foundry_nodes, key=lambda n: n["node_id"]):
+        developer = _developer(deployment)
+        forms = _name_forms(deployment)
+        if not developer or not forms["primary"]:
+            continue
+        search_terms = [(forms["primary"], "foundry_model_name", 1)]
+        if forms["composite"]:
+            search_terms.insert(0, (forms["composite"], "foundry_model_name_and_version", 2))
+        for term, rule, priority in search_terms:
+            for target in index.get((developer, term), ()):
+                version = deployment["details"].get("model_version")
+                # Do not link observations whose independently reported version
+                # fields explicitly conflict, even when model names match.
+                other = target["details"].get("Version") if target["source_type"] == "organization_register" else target["details"].get("version")
+                if (isinstance(version, str) and version.strip() and
+                        isinstance(other, str) and other.strip() and _norm(version) != _norm(other)):
+                    continue
+                left, right, pair_id = _pair(deployment["node_id"], target["node_id"], nodes)
+                if pair_id in result and result[pair_id][0] >= priority:
+                    continue
+                info = ("Observed Foundry model name + version" if priority == 2 else
+                        "Observed Foundry model name (version correspondence NOT established)")
+                result[pair_id] = (priority, {"pair_id": pair_id, "left_id": left, "right_id": right,
+                     "reason": f"{info} matches a {target['source_type']} identifier; "
+                               f"curated publisher context: {developer}; no runtime checkpoint attestation; "
+                               "hosting region does not establish inference-processing geography",
+                     "match_rule": rule, "match_strength": "name_and_version" if priority == 2 else "model_name",
+                     "developer_context": developer, "proposed_relation": "hosted_offering_of",
+                     "suggested_relation": "hosted_offering_of (review required)",
+                     "evidence_hashes": {left: nodes[left]["evidence_sha256"],
+                                         right: nodes[right]["evidence_sha256"]}})
+                if len(result) > MAX_SUGGESTIONS:
+                    raise IntelligenceError("Too many Foundry identity hints; narrow discovery")
+    return [v for _, v in sorted(result.values(), key=lambda v: v[1]["pair_id"])]
+
+
 def suggestions(nodes: dict, identity_state: dict) -> list[dict]:
     """Deterministic, review-only multi-source hints; never assert identity or approval."""
-    result = _matching_candidates(nodes)
+    base = _matching_candidates(nodes)
+    linked = _foundry_suggestions(nodes)
+    if len(base) + len(linked) > MAX_SUGGESTIONS:
+        raise IntelligenceError("Too many identity suggestions; reduce input scope")
+    result = sorted(base + linked, key=lambda x: x["pair_id"])
     for item in result:
         saved = identity_state["links"].get(item["pair_id"])
         item["link_status"] = link_status(saved, nodes) if saved else "unreviewed"
@@ -275,6 +365,9 @@ def link_status(link:dict|None,nodes:dict) -> str:
         return "stale_evidence"
     if link.get("status")=="confirmed" and any(nodes[k]["kind"]=="intelligence_candidate" and nodes[k]["review_status"]!="acknowledged" for k in endpoints):
         return "stale_candidate_review"
+    if link.get("status")=="confirmed" and any(nodes[k]["kind"]=="foundry_deployment" and
+                                                   nodes[k].get("observation_status")!="observed" for k in endpoints):
+        return "stale_deployment_observation"
     return link.get("status","invalid")
 
 
@@ -361,6 +454,8 @@ def apply_review(identity_state:dict,nodes:dict,request:dict,reviewer:str,*,at:s
             for key in (left,right):
                 if nodes[key]["kind"]=="intelligence_candidate" and nodes[key]["review_status"]!="acknowledged":
                     raise IntelligenceError("A model identity cannot be confirmed while source candidate evidence is unreviewed or rejected")
+                if nodes[key]["kind"]=="foundry_deployment" and nodes[key].get("observation_status")!="observed":
+                    raise IntelligenceError("A Foundry deployment link requires a currently observed deployment")
             proof_kind=row.get("proof_kind") or None
             proof_reference=row.get("proof_reference") or None
             if relation=="exact_checkpoint":
@@ -400,8 +495,8 @@ def summary(identity_state:dict,nodes:dict) -> dict:
             "suggested_pairs":len(hints),"suggestions_by_rule":dict(sorted(rule_counts.items())),
             "no_suggestions_reason": (None if hints else
                 "No eligible cross-source identifier/alias match. Hugging Face-only "
-                "discovery rarely establishes a pair; enable authorized Mistral/xAI "
-                "API discovery or use identity-template for evidence-backed manual links."),
+                "discovery rarely establishes a pair; collect permitted Foundry deployment "
+                "scopes and/or developer APIs, or use identity-template for manual evidence-backed links."),
             "confirmed_links":statuses.get("confirmed",0),"rejected_pairs":statuses.get("rejected",0),
             "stale_links":sum(n for k,n in statuses.items() if k.startswith("stale_")),
             "revoked_links":statuses.get("revoked",0)}
