@@ -167,6 +167,7 @@ class IdentityTests(unittest.TestCase):
         nodes,_,_=fixture()
         hf=next(k for k in nodes if "hf:" in k)
         nodes[hf]["label"]="mistralai/mistral-small-latest"
+        nodes[hf]["details"]["repository_id"]="mistralai/mistral-small-latest"
         s=D.suggestions(nodes,D.empty_state())
         self.assertEqual(1,len(s))
         self.assertIn("mutable API alias",s[0]["reason"])
