@@ -4,7 +4,7 @@
 
 This module discovers and tracks **candidate** models and repository metadata from Mistral, xAI, and an explicitly curated Hugging Face watchlist. It **does not** approve models, change the model-register decisions, execute inference, execute downloaded code, or download weights. API access is account-scoped, so it is **not** a definitive global catalogue. Disappearance from a catalogue is **never interpreted as retirement**.
 
-**Important distinction:** A model visible in the Mistral API may be a *third-party developer's model*. The developer API identifies the offering visible to that account, not necessarily the originating developer or model checkpoint. API metadata includes `catalogue_provider` and `developer_identity_confirmed: false` for this reason. Hugging Face repository ownership is a publishing claim, not an independently validated provenance or safety attestation. In this version, model identity across APIs, provider aliases, and Hugging Face repositories is **not** automatically reconciled.
+**Important distinction:** A model visible in the Mistral API may be a *third-party developer's model*. The developer API identifies the offering visible to that account, not necessarily the originating developer or model checkpoint. API metadata includes `catalogue_provider` and `developer_identity_confirmed: false` for this reason. Hugging Face repository ownership is a publishing claim, not an independently validated provenance or safety attestation. The intelligence collector itself never merges identities or makes model approvals. In v1.4, a separate [Model Identity Reconciliation](IDENTITY.md) workflow proposes **review-only** cross-source matches, with evidence-bound reviewer confirmation; model weights and hosted checkpoints are not automatically verified.
 
 Official API references: [Mistral List Models](https://docs.mistral.ai/api/endpoint/models), [xAI List Language Models](https://docs.x.ai/developers/rest-api-reference/inference/models), [Hugging Face HfApi author/list and metadata](https://huggingface.co/docs/huggingface_hub/main/package_reference/hf_api).
 
@@ -14,7 +14,7 @@ Official API references: [Mistral List Models](https://docs.mistral.ai/api/endpo
 
 - `enabled: true` with **Hugging Face public metadata** collection enabled.
 - Mistral and xAI API discovery **disabled until you enable it and supply credentials**.
-- A short curated publisher watchlist: `mistralai`, `meta-llama`, `deepseek-ai`, and `Qwen`, plus exact pinned repository IDs.
+- A curated publisher watchlist: `mistralai`, `meta-llama`, `deepseek-ai`, `Qwen`, `xai-org`, and `openai`, plus explicit repository IDs.
 - Publisher queries capped at 10 per author. If the source returns exactly the cap, status is **partial**, and **no completeness or retirement inference** is made. Increase the cap deliberately or narrow the watchlist; the selected repository IDs are checked independently.
 
 Enable API discovery under `intelligence.apis.mistral.enabled` and/or `.xai.enabled`. In PowerShell, set **read-only model-list API keys** as environment variables, rather than storing them in YAML or the repository:
