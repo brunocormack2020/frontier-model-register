@@ -21,6 +21,12 @@ from .intelligence import (IntelligenceError, validate_config as validate_intell
     collect as collect_intelligence, merge as merge_intelligence,
     summary as intelligence_summary, export_json as export_intelligence_json,
     add_excel_sheets as add_intelligence_excel_sheets, apply_review as apply_intelligence_review)
+from .identity import (
+    load_state as load_identity_state, save_state as save_identity_state,
+    node_inventory as identity_node_inventory, summary as identity_summary,
+    review_queue as identity_review_queue, manual_template as identity_manual_template,
+    apply_review as apply_identity_review, export_json as export_identity_json,
+    add_excel_sheets as add_identity_excel_sheets)
 from .confluence import ConfluenceConfig, ConfluencePublisher, ConfluenceError, managed_section
 from .benchmarks import (ensure_benchmarks, import_evidence, merge_observations,
                          make_benchmark_review_queue, apply_benchmark_review, set_scope,
@@ -64,6 +70,15 @@ def _render(state: dict, cfg: dict) -> dict:
         add_intelligence_excel_sheets(out / "model_register.xlsx", intel)
         export_intelligence_json(intel, out)
         intelligence_info = intelligence_summary(intel)
+    # Identity reconciliation is an additive reviewed layer, never a register mutation.
+    identity_info = None
+    identity_path = work / "identity.json"
+    if intel_path.exists() or identity_path.exists():
+        identity_nodes = identity_node_inventory(load_intelligence_state(intel_path), state)
+        identity_state = load_identity_state(identity_path)
+        add_identity_excel_sheets(out / "model_register.xlsx", identity_state, identity_nodes)
+        export_identity_json(identity_state, identity_nodes, out)
+        identity_info = identity_summary(identity_state, identity_nodes)
     export_html(fragment, out / "register_preview.html")
     (out / "confluence_fragment.html").write_text(fragment, encoding="utf-8")
     (out / "confluence_initial_section.html").write_text(managed_section(fragment), encoding="utf-8")
@@ -81,6 +96,8 @@ def _render(state: dict, cfg: dict) -> dict:
         summary.update(benchmark_summary(state))
     if intelligence_info is not None:
         summary["intelligence"] = intelligence_info
+    if identity_info is not None:
+        summary["identity"] = identity_info
     atomic_json(out / "run_summary.json", summary)
     return summary
 
@@ -130,6 +147,16 @@ def parser() -> argparse.ArgumentParser:
     intelligence_review = sub.add_parser("intelligence-review", help="Acknowledge/reject candidate metadata; never approve a model")
     intelligence_review.add_argument("--file", type=Path, required=True)
     intelligence_review.add_argument("--reviewer", required=True)
+    sub.add_parser("identity-status", help="Show model identity links, stale status and suggested matches; offline")
+    sub.add_parser("identity-suggest", help="Generate conservative identity suggestions and review queue; offline")
+    sub.add_parser("identity-export", help="Regenerate identity JSON and Excel views without network calls")
+    manual = sub.add_parser("identity-template", help="Create a manual, evidence-bound pair-review template")
+    manual.add_argument("--left", required=True, help="intel:<candidate_id> or register:<record_id>")
+    manual.add_argument("--right", required=True, help="intel:<candidate_id> or register:<record_id>")
+    manual.add_argument("--output", type=Path, required=True)
+    identity_review = sub.add_parser("identity-review", help="Review a model identity relationship; never approve models")
+    identity_review.add_argument("--file", type=Path, required=True)
+    identity_review.add_argument("--reviewer", required=True)
     publish = sub.add_parser("publish", help="Preview an update to a configured existing Confluence page; no write by default")
     publish.add_argument("--apply", action="store_true", help="Write the managed section after retrieving the current page version")
     return p
@@ -191,6 +218,23 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(_render(state, cfg), indent=2))
                 return 0
             state = load_state(state_path)
+            if args.command.startswith("identity-"):
+                identity_path = work / "identity.json"
+                links = load_identity_state(identity_path)
+                nodes = identity_node_inventory(load_intelligence_state(work / "intelligence.json"), state)
+                if args.command == "identity-status":
+                    print(json.dumps(identity_summary(links, nodes), indent=2))
+                    return 0
+                if args.command == "identity-template":
+                    atomic_json(args.output, identity_manual_template(nodes, links, args.left, args.right))
+                    print(f"Wrote {args.output}")
+                    return 0
+                if args.command == "identity-review":
+                    links = apply_identity_review(links, nodes, read_json(args.file), args.reviewer)
+                    save_identity_state(identity_path, links)
+                # identity-suggest and identity-export regenerate current outputs without approval changes.
+                print(json.dumps(_render(state, cfg), indent=2))
+                return 0
             if args.command == "intelligence-status":
                 intel = load_intelligence_state(work / "intelligence.json")
                 print(json.dumps(intelligence_summary(intel), indent=2))
