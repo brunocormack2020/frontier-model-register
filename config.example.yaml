@@ -84,6 +84,10 @@ intelligence:
       - meta-llama/Llama-3.3-70B-Instruct
       - deepseek-ai/DeepSeek-R1
       - Qwen/Qwen3-32B
+      # Curated developer publisher examples for reconciliation (public metadata only).
+      - xai-org/grok-1
+      - xai-org/grok-2
+      - openai/gpt-oss-20b
     # Bounded recent models; status is 'partial' if the publisher cap is reached.
     publishers:
       - name: mistralai
@@ -97,6 +101,12 @@ intelligence:
         max_results: 10
       - name: Qwen
         prefixes: [Qwen]
+        max_results: 10
+      - name: xai-org
+        prefixes: [grok]
+        max_results: 10
+      - name: openai
+        prefixes: [gpt-oss]
         max_results: 10
 
 confluence:

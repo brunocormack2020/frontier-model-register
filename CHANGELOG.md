@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0 — 16 November 2026
+
+### Multi-source identity matching and explainable no-match reporting
+
+- Extended deterministic, review-only suggestions across Mistral/xAI API↔curated Hugging Face, developer API↔same-provider organization-register, and curated Hugging Face↔register records.
+- Added scoped publisher namespaces (`xai-org`, `openai`, `google`, plus the existing curated developers); guarded against cross-provider name collisions and unverified publishers.
+- Distinguished full-ID matches, weaker registered family+version matches, and mutable API aliases without stripping important version/variant suffixes or asserting checkpoint equivalence.
+- Added per-suggestion match rule/strength, developer context, source review state, and full node IDs to the Identity Suggestions worksheet and JSON output.
+- Blank suggestions now receive an explanatory workbook row and `identity-status` exposes source counts, rule breakdown and actionable diagnostics.
+- Expanded curated Hugging Face watchlist for xAI and OpenAI open-weight models. Added negative/positive regression tests, preserved existing source and approval state, no `init` or data migration required.
+
 ## 1.3.0 — 16 November 2026
 
 ### Evidence-bound model identity reconciliation
