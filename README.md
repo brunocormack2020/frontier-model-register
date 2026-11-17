@@ -1,4 +1,4 @@
-# Frontier model register automation — v1.3.0
+# Frontier model register automation — v1.4.0
 
 Terminology update: commands now use organization-template and organization-update; decision fields and saved-state keys use Organization / organization. Existing state and review files from earlier releases require a deliberate migration before use. Preserve the original state and audit history; do not perform a blind text replacement on operational JSON.
 
@@ -20,7 +20,7 @@ The supplied seed is `data/Organization_Frontier_Model_Register_2026-11-14.xlsx`
 
 Version 1.1 adds seven core cyber benchmarks, conditional secure-coding and SOC tracks, and a separate AISI cyber-range evidence register. The bundled evidence contains **257 core benchmark observations, 48 conditional observations and 52 AISI findings**, collected or transcribed from public primary sources. Every observation starts pending review. Several results concern historical models; this is not complete score coverage of every current registered model.
 
-## Model Identity Reconciliation — v1.3.0
+## Model Identity Reconciliation — v1.4.0 (multi-source)
 
 **Identity is not approval.** This new layer helps reviewers distinguish an API model identifier, a Hugging Face repository, and a registered model record. A matching name, mutable alias or shared family does **not** prove two providers serve an identical checkpoint. Automatic matching creates suggestions only, never approved mappings or model eligibility changes.
 
@@ -36,7 +36,9 @@ Copy-Item .\out\identity_review_queue.json .\work\identity_review_working.json
 Start-Process .\out\model_register.xlsx
 ```
 
-For relationships that do not appear as conservative Mistral API/Hugging Face name suggestions, use `identity-template --left <intel:...> --right <register:...|intel:...> --output .\work\manual_identity.json`. Review and execute that file using `identity-review`. The output adds **Identity Suggestions** and **Model Identity Links** worksheets and the corresponding JSON review/evidence records.
+Automatic suggestions now compare **Mistral/xAI developer APIs**, curated Hugging Face publisher repositories (including `xai-org` and `openai`), and **same-developer existing register records**. Rules distinguish full reported ID matches, weaker registered family+version matches, and mutable API aliases; they never infer identical checkpoints or grant approval. `identity-status` reports source-node counts, match rules and a no-match diagnostic. If only Hugging Face data has been collected, **zero cross-source suggestions is valid**; the Excel sheet now explains this instead of appearing blank. Read [the complete v1.4 matching rules](docs/IDENTITY.md).
+
+For relationships that do not appear as conservative automatic cross-source suggestions, use `identity-template --left <intel:...> --right <register:...|intel:...> --output .\work\manual_identity.json`. Review and execute that file using `identity-review`. The output adds **Identity Suggestions** and **Model Identity Links** worksheets and the corresponding JSON review/evidence records.
 
 Confirmed relationships are evidence-bound: if the metadata of either endpoint changes, the displayed link becomes **stale** until re-reviewed. Existing main-register records, benchmarks, organization decisions and supplier sources remain unchanged. **Do not run `init` again.** See [the full identity workflow and limitations](docs/IDENTITY.md).
 
