@@ -19,6 +19,156 @@ The supplied seed is `data/Organization_Frontier_Model_Register_2026-11-14.xlsx`
 
 Version 1.1 adds seven core cyber benchmarks, conditional secure-coding and SOC tracks, and a separate AISI cyber-range evidence register. The bundled evidence contains **257 core benchmark observations, 48 conditional observations and 52 AISI findings**, collected or transcribed from public primary sources. Every observation starts pending review. Several results concern historical models; this is not complete score coverage of every current registered model.
 
+## Windows quick start and troubleshooting
+
+This section covers a **fresh clone**, routine runs, and the problems encountered when setting up the project in PowerShell. All commands below are run **from the repository root** (the directory containing `run_register.py`, `requirements-tested.txt`, and `config.example.yaml`). For a different location, replace the example directory with your own.
+
+### A. Clone or update the repository
+
+For a first-time installation, open PowerShell in the folder where you keep projects:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\frontier" | Out-Null
+Set-Location "$env:USERPROFILE\frontier"
+git clone https://github.com/brunocormack2020/frontier-model-register.git
+Set-Location .\frontier-model-register
+```
+
+GitHub authentication may be required depending on repository visibility and your Git credential setup. Alternatively, download the repository ZIP from GitHub and open PowerShell in the *extracted project root*; downloading a ZIP does **not** create a Git clone.
+
+For an **existing Git clone**, inspect local changes first, then update:
+
+```powershell
+git status
+git pull --ff-only origin main
+```
+
+Do not discard local changes to make a pull succeed. The `work/` state and `config.yaml` are intentionally local and are not reconstructed by Git. See the migration warning at the beginning of this README before bringing an old, bank-prefixed state into an organization-prefixed codebase.
+
+### B. Set up Python once per project directory
+
+The project requires Python **3.11+**. A virtual environment created in a different project folder is **not** reused automatically by a new clone.
+
+```powershell
+py --version
+Test-Path .\run_register.py
+py -m venv .venv
+Test-Path .\.venv\Scripts\python.exe
+.\.venv\Scripts\python.exe -m pip install -r .\requirements-tested.txt
+.\.venv\Scripts\python.exe -c "import yaml, httpx, openpyxl, pypdf; print('Dependencies OK')"
+```
+
+The second `Test-Path` should return `True`. If `py` is unavailable, check `python --version` and use `python -m venv .venv` instead, provided the version meets the requirement. There is no need to activate the environment or change PowerShell execution policy when invoking its `python.exe` directly.
+
+Create a configuration **only if one does not already exist**:
+
+```powershell
+if (-not (Test-Path .\config.yaml)) { Copy-Item .\config.example.yaml .\config.yaml }
+```
+
+Configuration, state and output paths are resolved from `config.yaml`; check `work_dir` and `output_dir` there if you customized them.
+
+### C. Initialize only when no operational state exists
+
+Before running `init`, check:
+
+```powershell
+Test-Path .\work\register.json
+Get-ChildItem .\data\*Frontier_Model_Register*.xlsx
+```
+
+If `work/register.json` is **absent**, run this **once** with the initialization workbook bundled with *your current checkout*:
+
+```powershell
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml init --workbook .\data\Organization_Frontier_Model_Register_2026-11-14.xlsx
+```
+
+If your checkout contains a differently named seed workbook, substitute the **actual filename reported by `Get-ChildItem`**. Initialization imports the bundled benchmark evidence and does not require vendor API keys or network access after the Python packages are installed.
+
+If the state **already exists**, **do not** run `init`, delete `work/`, or re-import bundled evidence to force a match with an example workbook. Use `status` and `export` instead. In particular, older state created with the bank-prefixed version must follow an explicit migration; copying it into a newer organization-prefixed checkout is not a supported shortcut.
+
+### D. Everyday commands (after initialization)
+
+Close any open copy of `out/model_register.xlsx` before exporting.
+
+```powershell
+# Check existing state without fetching sources
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml status
+
+# Regenerate Excel, HTML, JSON and review queues from the saved state (offline)
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml export
+
+# Open the generated workbook and browser preview
+Start-Process .\out\model_register.xlsx
+Start-Process .\out\register_preview.html
+
+# Run offline regression tests
+.\.venv\Scripts\python.exe .\run_tests.py
+```
+
+When you want to **fetch current public evidence**, with internet access and the relevant hosts allowed:
+
+```powershell
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml benchmark-refresh
+$LASTEXITCODE
+
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml refresh
+$LASTEXITCODE
+```
+
+Use `benchmark-refresh` for published benchmark collection; `refresh` checks configured model/vendor sources and, where enabled, benchmarks. Exit codes: **0** command completed, **1** command/configuration failure, **2** at least one source/provider unavailable (existing successful evidence is retained). A successful refresh does **not** approve the evidence or the model.
+
+### E. Expected first-run output and where to look
+
+With the bundled starting dataset and no additional imports/reviews, `status` or `export` should report approximately the following **baseline snapshot**:
+
+| JSON field | Initial value |
+|---|---:|
+| `records` | 65 |
+| `current_records` | 23 |
+| `benchmark_observations` | 305 |
+| `aisi_findings` | 52 |
+| `pending_benchmark_reviews` | 357 |
+| `unmapped_results` | 347 |
+| `conditional_scope.coding` / `conditional_scope.soc` | `false` / `false` |
+
+These are **seed counts, not live coverage assurances**; the figures can legitimately change after collecting sources or applying reviews. `unmapped_results` means evidence still requires correspondence review; it does not mean that the observation has no published score.
+
+| Path | Purpose |
+|---|---|
+| `data/Organization_Frontier_Model_Register_2026-11-14.xlsx` | Dated initialization input; **not** the refreshed register. |
+| `examples/first_run_model_register.xlsx` | Static example committed to GitHub; it is **not** automatically overwritten. |
+| `work/register.json` | Authoritative operational state (do not edit/delete casually). |
+| `out/model_register.xlsx` | Your **newly generated** workbook. |
+| `out/register_preview.html` | Generated HTML preview. |
+| `out/benchmark_review_queue.json` | Evidence and model-mapping review queue. |
+
+To check that the **Benchmark Coverage** display contains scores (v1.1.1), inspect the row for `claude-opus-4-6` and the **CVE-Bench** column. The bundled reference shows **32.5%** and **40%** under different settings, marked as pending review. The detailed numeric observations are in **Benchmark Results**; **AISI Evidence** is separate. Missing results are not zero, and a name/version suggestion is **not** an accepted model mapping.
+
+A generated workbook may differ from the example because its state, evidence, scope or review decisions have changed. Matching JSON counts alone does **not** prove cell-for-cell workbook equality.
+
+### F. Troubleshooting (PowerShell)
+
+| Symptom | Diagnosis / fix |
+|---|---|
+| `'.\\.venv\\Scripts\\python.exe' is not recognized` | The environment is missing in **this** checkout or was created elsewhere. From the project root run `py -m venv .venv`; confirm `Test-Path .\\.venv\\Scripts\\python.exe` returns `True`. |
+| `ModuleNotFoundError: No module named 'yaml'` | PyYAML/dependencies are not installed into this environment. Run `.\\.venv\\Scripts\\python.exe -m pip install -r .\\requirements-tested.txt`, then the import check in step B. |
+| `py` is not recognized | Try `python --version`; install/configure Python 3.11+ if neither works, reopen PowerShell, then create `.venv`. |
+| `run_register.py` cannot be found | Run `Get-Location` and `Test-Path .\\run_register.py`; change to the **repository root**, not its parent or `out/`. |
+| `config.yaml` missing | Run `Copy-Item .\\config.example.yaml .\\config.yaml` once. Do not overwrite a customized config. |
+| Workbook path in `init` not found | Run `Get-ChildItem .\\data\\*Frontier_Model_Register*.xlsx` and use the actual path in the checkout. The original bank-prefixed download and current organization-prefixed repository may differ. |
+| `State already exists` / init refuses overwrite | The register was already initialized. Run `status` or `export`; do not delete `work/` to restart without a deliberate backup/migration plan. |
+| `PermissionError` / cannot save workbook | Close Excel instances holding `out/model_register.xlsx`, then rerun `export`. |
+| Benchmark Coverage has no displayed scores | Confirm `Get-Content .\\src\\frontier_register\\__init__.py` shows `1.1.1` or newer; update the checkout safely and run `export`. Look at the **generated `out/model_register.xlsx`**, not the original `data/` seed. |
+| Scores differ from the committed example | Check `status`, the configured `work_dir` and output path, the evidence/review queues, and any prior refresh. Compare the actual generated `out/model_register.xlsx` with the static `examples/` workbook rather than assuming they are identical. |
+| `git pull` reports local changes or a divergence | Run `git status` and resolve local edits deliberately. Do not force reset the repository or remove local state as troubleshooting. |
+| Refresh returns exit code `2` | Inspect source error counters and review queues; check proxy, TLS trust, allowed hosts, blocked PDFs and changed source formats. Previous evidence should remain available; do not treat failed collection as a zero or deletion. |
+| Python packages fail to install | Check the Python version, connectivity, approved package index and the **full pip error**. Use the same `.venv\Scripts\python.exe` for installing and running. |
+
+**Operational safety:** `.venv/`, `config.yaml`, `work/` and `out/` are intentionally excluded from version control. Back up `config.yaml` and the entire `work/` directory before upgrades or migrations; avoid committing credentials, operational register state or organization-specific decisions. The code can publish to Confluence only when configured, and `publish` without `--apply` is a dry run.
+
+---
+
 ## What is automated
 
 | Function | Behavior |
