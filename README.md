@@ -1,4 +1,4 @@
-# Frontier model register automation — v1.1.1
+# Frontier model register automation — v1.2.0
 
 Terminology update: commands now use organization-template and organization-update; decision fields and saved-state keys use Organization / organization. Existing state and review files from earlier releases require a deliberate migration before use. Preserve the original state and audit history; do not perform a blind text replacement on operational JSON.
 
@@ -168,6 +168,23 @@ A generated workbook may differ from the example because its state, evidence, sc
 **Operational safety:** `.venv/`, `config.yaml`, `work/` and `out/` are intentionally excluded from version control. Back up `config.yaml` and the entire `work/` directory before upgrades or migrations; avoid committing credentials, operational register state or organization-specific decisions. The code can publish to Confluence only when configured, and `publish` without `--apply` is a dry run.
 
 ---
+
+## v1.2 — Vendor Model Intelligence
+
+This version adds **read-only candidate discovery** through Mistral's model-list API, xAI's language-model API, and **curated Hugging Face publisher/repository metadata**. It does not classify, automatically approve, import into the organization's governed model inventory, execute model inference, or download weights. Results live in a separate local state: `work/intelligence.json`.
+
+See **[Vendor Intelligence setup, scope, reviews and troubleshooting](docs/INTELLIGENCE.md)** for configuration, supported APIs, limitations, and review semantics.
+
+**After pulling v1.2 into an existing checkout**, merge the `intelligence:` block from `config.example.yaml` into your existing local `config.yaml` (do not overwrite the latter). Existing `work/register.json` state and decisions are preserved; do **not** rerun `init`. Mistral/xAI require `MISTRAL_API_KEY` / `XAI_API_KEY` respectively and are initially disabled. Curated Hugging Face metadata is enabled by default.
+
+```powershell
+# From the repository root, after the original register was initialized:
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml intelligence-refresh
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml intelligence-status
+Start-Process .\out\model_register.xlsx
+```
+
+The normal Excel export gains **Vendor Intelligence**, **Intelligence Events**, and **Intelligence Sources** worksheets after the first intelligence refresh. Review candidates through `out/intelligence_review_queue.json` and `intelligence-review`; an acknowledgement of observed metadata is **not** a frontier-model approval. Unavailable/partial API results never mean a model retired or disappeared. Cross-provider model/alias reconciliation is not automatic.
 
 ## What is automated
 

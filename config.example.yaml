@@ -66,6 +66,39 @@ benchmarks:
     - data/benchmark_results_seed.json
     - data/benchmark_evidence_seed.json
   max_cve_runs: 200
+# Developer and curated Hugging Face model intelligence (read-only).
+intelligence:
+  enabled: true
+  timeout_seconds: 20
+  max_response_bytes: 3000000
+  apis:
+    mistral:
+      enabled: false  # Set true and provide MISTRAL_API_KEY through the environment
+    xai:
+      enabled: false  # Set true and provide XAI_API_KEY through the environment
+  huggingface:
+    enabled: true
+    # Exact repository metadata snapshots, without downloading model weights.
+    repositories:
+      - mistralai/Mistral-Small-3.1-24B-Instruct-2503
+      - meta-llama/Llama-3.3-70B-Instruct
+      - deepseek-ai/DeepSeek-R1
+      - Qwen/Qwen3-32B
+    # Bounded recent models; status is 'partial' if the publisher cap is reached.
+    publishers:
+      - name: mistralai
+        prefixes: [Mistral, Mixtral, Codestral, Devstral, Magistral, Ministral, Pixtral]
+        max_results: 10
+      - name: meta-llama
+        prefixes: [Llama, Meta-Llama]
+        max_results: 10
+      - name: deepseek-ai
+        prefixes: [DeepSeek]
+        max_results: 10
+      - name: Qwen
+        prefixes: [Qwen]
+        max_results: 10
+
 confluence:
   enabled: false
   mode: cloud

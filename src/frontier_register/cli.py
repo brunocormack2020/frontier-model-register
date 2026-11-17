@@ -16,6 +16,11 @@ from .core import (StateLock, RegisterError, HEADERS, PROVIDERS, atomic_json, re
                    audit, digest, monitoring, utc_now)
 from .collectors import fetch_sources, discover_models, CollectionError, DiscoveryError
 from .render import export_excel, export_html, confluence_fragment
+from .intelligence import (IntelligenceError, validate_config as validate_intelligence_config,
+    load_state as load_intelligence_state, save_state as save_intelligence_state,
+    collect as collect_intelligence, merge as merge_intelligence,
+    summary as intelligence_summary, export_json as export_intelligence_json,
+    add_excel_sheets as add_intelligence_excel_sheets, apply_review as apply_intelligence_review)
 from .confluence import ConfluenceConfig, ConfluencePublisher, ConfluenceError, managed_section
 from .benchmarks import (ensure_benchmarks, import_evidence, merge_observations,
                          make_benchmark_review_queue, apply_benchmark_review, set_scope,
@@ -29,6 +34,8 @@ def configuration(path: Path) -> dict:
         raise RegisterError("Cannot read configuration YAML.") from exc
     if not isinstance(cfg, dict) or cfg.get("schema_version") != 1:
         raise RegisterError("Configuration requires schema_version: 1.")
+    if "intelligence" in cfg:
+        validate_intelligence_config(cfg["intelligence"])
     root = path.resolve().parent
     cfg["work_path"] = (root / cfg.get("work_dir", "work")).resolve()
     cfg["output_path"] = (root / cfg.get("output_dir", "out")).resolve()
@@ -50,6 +57,13 @@ def _render(state: dict, cfg: dict) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     fragment = confluence_fragment(state, cfg.get("confluence", {}).get("include_prior_summary", True))
     export_excel(state, work / "template.xlsx", out / "model_register.xlsx")
+    intel_path = work / "intelligence.json"
+    intelligence_info = None
+    if intel_path.exists():
+        intel = load_intelligence_state(intel_path)
+        add_intelligence_excel_sheets(out / "model_register.xlsx", intel)
+        export_intelligence_json(intel, out)
+        intelligence_info = intelligence_summary(intel)
     export_html(fragment, out / "register_preview.html")
     (out / "confluence_fragment.html").write_text(fragment, encoding="utf-8")
     (out / "confluence_initial_section.html").write_text(managed_section(fragment), encoding="utf-8")
@@ -65,6 +79,8 @@ def _render(state: dict, cfg: dict) -> dict:
                "output_dir": str(out)}
     if "benchmarks" in state:
         summary.update(benchmark_summary(state))
+    if intelligence_info is not None:
+        summary["intelligence"] = intelligence_info
     atomic_json(out / "run_summary.json", summary)
     return summary
 
@@ -108,6 +124,12 @@ def parser() -> argparse.ArgumentParser:
     bs.add_argument("--coding",choices=("on","off"))
     bs.add_argument("--soc",choices=("on","off"))
     bs.add_argument("--actor",required=True)
+    sub.add_parser("intelligence-refresh", help="Read Mistral/xAI catalogues and curated Hugging Face repository metadata")
+    sub.add_parser("intelligence-status", help="Show candidate inventory and source health without network access")
+    sub.add_parser("intelligence-export", help="Regenerate intelligence sheets and JSON without network access")
+    intelligence_review = sub.add_parser("intelligence-review", help="Acknowledge/reject candidate metadata; never approve a model")
+    intelligence_review.add_argument("--file", type=Path, required=True)
+    intelligence_review.add_argument("--reviewer", required=True)
     publish = sub.add_parser("publish", help="Preview an update to a configured existing Confluence page; no write by default")
     publish.add_argument("--apply", action="store_true", help="Write the managed section after retrieving the current page version")
     return p
@@ -169,6 +191,37 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(_render(state, cfg), indent=2))
                 return 0
             state = load_state(state_path)
+            if args.command == "intelligence-status":
+                intel = load_intelligence_state(work / "intelligence.json")
+                print(json.dumps(intelligence_summary(intel), indent=2))
+                return 0
+            if args.command == "intelligence-refresh":
+                intel_config = cfg.get("intelligence", {})
+                if not intel_config.get("enabled", False):
+                    raise IntelligenceError("Enable intelligence in config.yaml before refreshing")
+                outcomes = collect_intelligence(intel_config)
+                intel, events = merge_intelligence(load_intelligence_state(work / "intelligence.json"), outcomes)
+                save_intelligence_state(work / "intelligence.json", intel)
+                report = _render(state, cfg)
+                report["intelligence_refresh"] = {
+                    "sources_checked": len(outcomes), "events_created": len(events),
+                    "unavailable": [o["source_id"] for o in outcomes if o["status"] == "unavailable"],
+                    "partial": [o["source_id"] for o in outcomes if o["status"] == "partial"],
+                }
+                print(json.dumps(report, indent=2))
+                return 2 if report["intelligence_refresh"]["unavailable"] else 0
+            if args.command == "intelligence-export":
+                print(json.dumps(_render(state, cfg), indent=2))
+                return 0
+            if args.command == "intelligence-review":
+                intel_path = work / "intelligence.json"
+                if not intel_path.exists():
+                    raise IntelligenceError("No intelligence state. Run intelligence-refresh first")
+                intel = apply_intelligence_review(load_intelligence_state(intel_path),
+                                                  read_json(args.file), args.reviewer)
+                save_intelligence_state(intel_path, intel)
+                print(json.dumps(_render(state, cfg), indent=2))
+                return 0
             if args.command == "status":
                 print(json.dumps({"state_version": state["state_version"], "state_sha256": digest(state), "records": len(state["records"]),
                                   "pending_reviews": len(make_review_queue(state)["items"]), "sources": len(state["sources"]),

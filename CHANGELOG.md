@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 — 16 November 2026
+
+### Vendor and third-party model intelligence — discovery phase
+
+- Added read-only Mistral model-list and xAI language-model API discovery (credentials via environment, opt-in).
+- Added curated Hugging Face publisher watches and exact repository metadata snapshots (revision, declared license, gating, file-type metadata; no weights or executable code).
+- Added independent `work/intelligence.json` state, candidate review queue, source health, new/change events and three Excel worksheets.
+- Added `intelligence-refresh`, `intelligence-status`, `intelligence-review`, `intelligence-export` commands; no changes to governed model approvals.
+- Explicitly preserves prior observations on collection failures and marks capped publisher listings as partial, never authoritative completeness evidence.
+- Added offline regression tests, developer-intelligence documentation and GitHub test workflow.
+
+
 ## 1.1.1 — 15 November 2026
 
 ### Benchmark Coverage score display

@@ -36,3 +36,6 @@ dist/
 .DS_Store
 Thumbs.db
 ~$*.xlsx
+
+# Working intelligence review submissions
+/intelligence_review_working*.json
