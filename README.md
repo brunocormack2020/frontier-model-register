@@ -1,4 +1,4 @@
-# Frontier model register automation — v1.2.0
+# Frontier model register automation — v1.3.0
 
 Terminology update: commands now use organization-template and organization-update; decision fields and saved-state keys use Organization / organization. Existing state and review files from earlier releases require a deliberate migration before use. Preserve the original state and audit history; do not perform a blind text replacement on operational JSON.
 
@@ -8,6 +8,7 @@ Terminology update: commands now use organization-template and organization-upda
 - **Browser-readable example:** [examples/first_run_register_preview.html](examples/first_run_register_preview.html). Download and open it locally.
 - **Python entry point:** [run_register.py](run_register.py). Installation and refresh instructions follow below.
 - **Private GitHub setup:** [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md).
+- **Model Identity Reconciliation:** [docs/IDENTITY.md](docs/IDENTITY.md) — conservative suggestions, reviewer-confirmed cross-source links, and stale-evidence handling.
 
 Version 1.1.1 fixes the **Benchmark Coverage** worksheet: populated cells now show published values, metrics, test settings and mapping/review status, with links to the detailed evidence. Version 1.1.0 showed counts and status messages only. Regenerate an existing register with `export` after updating the code; do not run `init` again.
 
@@ -18,6 +19,26 @@ This Python package imports the supplied register, monitors official vendor evid
 The supplied seed is `data/Organization_Frontier_Model_Register_2026-11-14.xlsx`: 23 current model records, 42 prior/special records and the original 38 fields. The seed is a dated starting point, not a continuously verified catalog. Its claims and review limitations remain intact on import.
 
 Version 1.1 adds seven core cyber benchmarks, conditional secure-coding and SOC tracks, and a separate AISI cyber-range evidence register. The bundled evidence contains **257 core benchmark observations, 48 conditional observations and 52 AISI findings**, collected or transcribed from public primary sources. Every observation starts pending review. Several results concern historical models; this is not complete score coverage of every current registered model.
+
+## Model Identity Reconciliation — v1.3.0
+
+**Identity is not approval.** This new layer helps reviewers distinguish an API model identifier, a Hugging Face repository, and a registered model record. A matching name, mutable alias or shared family does **not** prove two providers serve an identical checkpoint. Automatic matching creates suggestions only, never approved mappings or model eligibility changes.
+
+After completing `intelligence-refresh` and acknowledging relevant intelligence-candidate metadata:
+
+```powershell
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml identity-status
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml identity-suggest
+Copy-Item .\out\identity_review_queue.json .\work\identity_review_working.json
+# Edit the selected action, relation, evidence_url, review_note; exact_checkpoint needs proof_kind/proof_reference.
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml identity-review --file .\work\identity_review_working.json --reviewer "Identity Reviewer"
+.\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml identity-export
+Start-Process .\out\model_register.xlsx
+```
+
+For relationships that do not appear as conservative Mistral API/Hugging Face name suggestions, use `identity-template --left <intel:...> --right <register:...|intel:...> --output .\work\manual_identity.json`. Review and execute that file using `identity-review`. The output adds **Identity Suggestions** and **Model Identity Links** worksheets and the corresponding JSON review/evidence records.
+
+Confirmed relationships are evidence-bound: if the metadata of either endpoint changes, the displayed link becomes **stale** until re-reviewed. Existing main-register records, benchmarks, organization decisions and supplier sources remain unchanged. **Do not run `init` again.** See [the full identity workflow and limitations](docs/IDENTITY.md).
 
 ## Windows quick start and troubleshooting
 
