@@ -1,6 +1,6 @@
-# Model Identity Reconciliation — v1.3
+# Model Identity Reconciliation — v1.4: multi-source matching
 
-This component links **observations**, not permissions or approvals. It can reconcile a Mistral API model, a curated Hugging Face repository and a record already present in the organization register when an identified reviewer has sufficient evidence. It does **not** verify the bytes of a hosted checkpoint, discover Azure deployments, copy benchmark scores across identities, update model eligibility or auto-approve a model. There is **no transitive identity inference**.
+This component links **observations**, not permissions or approvals. It can propose reviewer-visible relationships between Mistral/xAI API catalogue entries, curated Hugging Face repositories, and existing organization register records when an identified reviewer has sufficient evidence. It does **not** verify the bytes of a hosted checkpoint, discover Azure deployments, copy benchmark scores across identities, update model eligibility or auto-approve a model. There is **no transitive identity inference**.
 
 ## Why this matters
 
@@ -44,7 +44,25 @@ The intelligence review acknowledges **source metadata**, not equivalence or app
 Copy-Item .\out\identity_review_queue.json .\work\identity_review_working.json
 ```
 
-Initial suggestions are **limited and deterministic**: an exact normalized Mistral API ID (or its declared alias) that matches a repository name within the curated `mistralai` Hugging Face publisher namespace. A matching name is never sufficient to establish that an API serves the same model weights or revision. Mutable alias suggestions are explicitly labeled as such. There is no speculative cross-provider fuzzy matching, no model-family-guessing engine, and no automatic links to unverified xAI repositories.
+### New multi-source rules (v1.4)
+
+Suggestions are **deterministic, source-aware and always unconfirmed**. A match is generated only within a curated developer context and only between **different source types**:
+
+| Source pairing | Suggestion rule | Default proposed relationship | Important limitation |
+|---|---|---|---|
+| Mistral or xAI developer API ↔ corresponding curated Hugging Face publisher | Entire reported model ID matches repository name after case/punctuation normalization | `same_model_version` | Does **not** identify the checkpoint served by the API. |
+| Developer API ↔ same-provider organization-register record | Exact reported model ID equals the registered `Exact Model ID` | `same_model_version` | Only compares the identifiers; does not establish enabled runtime version. |
+| Officially curated Hugging Face publisher ↔ corresponding organization-register provider | Repository name equals registered `Exact Model ID` | `same_model_version` | Requires a registered model record for the publisher's developer. |
+| Any supported pairing involving a registered model | Registered `Model Family` + `Version` exactly matches the other observed identifier after normalization | `same_family` | Weaker: a different model variant may share the same family and version fields. |
+| Developer API alias ↔ corresponding publisher repository or registered model | Reported alias matches the other identifier | `hosted_offering_of` | The alias may be mutable and **must not** be treated as a frozen release. |
+
+Default curated Hugging Face namespaces: `mistralai` (Mistral), `xai-org` (xAI), `openai` (OpenAI), `google` (Google), `meta-llama` (Meta), `deepseek-ai` (DeepSeek), `Qwen` (Qwen). These are **publisher-context filters**, not independently verified developer attestations or proof that an API serves the linked weights. Cross-developer coincidences, uncurated publishers, missing version identifiers, and arbitrary fuzzy/substring matches are blocked. There is **no transitive inference**.
+
+The xAI publisher namespace is publicly documented at [Hugging Face xai-org](https://huggingface.co/xai-org); the OpenAI open-weight publisher is [Hugging Face openai](https://huggingface.co/openai). Actual API availability and which models are offered remain account-specific.
+
+**A blank suggestions sheet may be correct.** Hugging Face-only discovery generally does not provide two supported *different-source* identities to reconcile. v1.4 shows an explanatory `No automatic suggestions` row instead of an empty sheet, and `identity-status` reports `source_nodes`, `suggestions_by_rule`, and `no_suggestions_reason`. To generate an API↔Hugging Face match, enable the appropriate developer API with an authorized credential and ensure the curated repository name corresponds to the observed API ID. For a registered model↔Hugging Face match, the existing register must contain that model under a corresponding provider.
+
+The *match strength* is a transparent description of identifier evidence (`full_name`, `family_version`, or `alias`), **not** a probability, model risk score, verification, or automatic confirmation. Review each proposed relation against authoritative evidence; a suggestion has no effect on model eligibility or benchmark mappings.
 
 Edit only the relevant queue entries. Set `action` to `confirm` or `reject`; for confirmation select a supported `relation`, add an HTTPS `evidence_url`, and explain the reviewer’s basis in `review_note`. For `exact_checkpoint`, additionally set `proof_kind` and `proof_reference` to a specific authoritative assertion (e.g. a vendor statement naming both model IDs and the artifact revision). The software validates the presence/structure of this proof **but does not establish its truth**.
 
@@ -56,7 +74,7 @@ An old queue is rejected if any relevant source inventory or link decision has c
 
 ## Manually propose an identity link
 
-Automatic suggestions intentionally cover only a narrow naming case. To review two other endpoints, generate an evidence-bound **manual** template:
+Automatic suggestions intentionally exclude ambiguous and unsupported naming cases. To review two other endpoints, generate an evidence-bound **manual** template:
 
 ```powershell
 .\.venv\Scripts\python.exe .\run_register.py --config .\config.yaml identity-template `
@@ -88,8 +106,8 @@ Start-Process .\out\model_register.xlsx
 | `out/identity_suggestions.json` | Named suggestions, basis and effective review status. |
 | `out/identity_review_queue.json` | Evidence-bound queue for reviewer action. |
 | `out/identity_links.json` | Confirmed/rejected/revoked relations with effective stale status. |
-| `out/identity_summary.json` | Counts of confirmed, stale, rejected and proposed links. |
-| **Identity Suggestions** (Excel) | Potential cross-source name matches and evidence references. |
+| `out/identity_summary.json` | Counts of confirmed/stale/rejected links, source-node counts, rule breakdown and no-match diagnostic. |
+| **Identity Suggestions** (Excel) | Suggested relationships, match rule/strength, developer context, both node IDs, metadata review status and evidence hashes. A no-match explanation is shown when appropriate. |
 | **Model Identity Links** (Excel) | Reviewer-attributed relations, proof reference, and current effective status. |
 
 The existing 38-column register, 305 benchmark observations, AISI evidence, vendor review queues, source data and organization decisions are unchanged. **No `init` or evidence re-import is required.** A normal `intelligence-refresh` can make a confirmed identity stale if the underlying source metadata changes. Re-acknowledge the new intelligence candidate and re-review the relationship before it may be treated as current again.
@@ -109,10 +127,10 @@ The existing 38-column register, 305 benchmark observations, AISI evidence, vend
 
 | Error / outcome | Suggested action |
 |---|---|
-| No suggestions | Run `intelligence-refresh`, then `identity-suggest`; check that both matching Mistral/HF sources were discovered. Many legitimate relationships require manual templates. |
+| No suggestions | Read `identity-status`'s `source_nodes` and `no_suggestions_reason`. Hugging Face-only inputs generally will not match. Enable an authorized corresponding Mistral/xAI API or supply a matching registered model; manual templates cover supported cases that cannot be matched exactly. |
 | Confirmation rejected because candidate evidence is pending/rejected | Acknowledge the source metadata through `intelligence-review`, then regenerate the identity queue. |
 | Stale review queue | Another refresh/review changed source hashes or saved identity decisions. Regenerate queue/template rather than edit hashes. |
 | `stale_evidence` | One endpoint changed its evidence digest or disappeared. Inspect the updated source and reconfirm or revoke with updated evidence. |
 | `stale_candidate_review` | Original candidate's metadata review is no longer current or was rejected. Re-review the source first. |
 | No model approvals changed | This is intentional. Identity reconciliation never changes bank eligibility, model benchmarking or deployment permission. |
-| Workbook doesn't show new sheets | Close the workbook in Excel, update to v1.3.0+, run `identity-export`, then open **out/model_register.xlsx**. |
+| Workbook doesn't show new sheets | Close the workbook in Excel, update to v1.4.0+, run `identity-export`, then open **out/model_register.xlsx**. |
