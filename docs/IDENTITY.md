@@ -1,6 +1,6 @@
 # Model Identity Reconciliation — v1.4: multi-source matching
 
-This component links **observations**, not permissions or approvals. It can propose reviewer-visible relationships between Mistral/xAI API catalogue entries, curated Hugging Face repositories, and existing organization register records when an identified reviewer has sufficient evidence. It does **not** verify the bytes of a hosted checkpoint, discover Azure deployments, copy benchmark scores across identities, update model eligibility or auto-approve a model. There is **no transitive identity inference**.
+This component links **observations**, not permissions or approvals. It can propose reviewer-visible relationships between Mistral/xAI API catalogue entries, curated Hugging Face repositories, and existing organization register records when an identified reviewer has sufficient evidence. It does **not** verify the bytes of a hosted checkpoint, copy benchmark scores across identities, update model eligibility or auto-approve a model. From v1.5, the separate [Foundry collector](FOUNDRY.md) can provide observed Azure deployments as additional identity nodes; reconciliation remains reviewer-only. There is **no transitive identity inference**.
 
 ## Why this matters
 
@@ -134,3 +134,12 @@ The existing 38-column register, 305 benchmark observations, AISI evidence, vend
 | `stale_candidate_review` | Original candidate's metadata review is no longer current or was rejected. Re-review the source first. |
 | No model approvals changed | This is intentional. Identity reconciliation never changes bank eligibility, model benchmarking or deployment permission. |
 | Workbook doesn't show new sheets | Close the workbook in Excel, update to v1.4.0+, run `identity-export`, then open **out/model_register.xlsx**. |
+
+
+## Azure Foundry deployed-model observations (v1.5)
+
+Following an authorized `foundry-refresh`, the identity engine can suggest `hosted_offering_of` relationships between actual Foundry account/project deployment observations and same-publisher registered models, developer APIs or curated Hugging Face repositories. Suggestions require full name correspondence and exclude conflicting declared versions. These matches do not establish checkpoint equivalence, contract terms, access, safety policy, or application authorization.
+
+`identity-status`, `identity-suggest`, the review queue and the **Identity Suggestions** worksheet display these deployment nodes. Link confirmations remain evidence-bound, reviewer-attributed, and are never model onboarding approvals. Links become stale when deployment source metadata changes or the deployment is not observed in a subsequent complete scan. Absence from a scan is not proof of deletion or policy violation.
+
+See [Azure Foundry Deployment Intelligence](FOUNDRY.md) for supported APIs, access scope, identity, Excel outputs and operational limitations.

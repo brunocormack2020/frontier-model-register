@@ -21,6 +21,12 @@ from .intelligence import (IntelligenceError, validate_config as validate_intell
     collect as collect_intelligence, merge as merge_intelligence,
     summary as intelligence_summary, export_json as export_intelligence_json,
     add_excel_sheets as add_intelligence_excel_sheets, apply_review as apply_intelligence_review)
+from .foundry import (
+    FoundryError, validate_config as validate_foundry_config,
+    load_state as load_foundry_state, save_state as save_foundry_state,
+    collect as collect_foundry, merge as merge_foundry,
+    summary as foundry_summary, export_json as export_foundry_json,
+    add_excel_sheets as add_foundry_excel_sheets, screening as foundry_screening)
 from .identity import (
     load_state as load_identity_state, save_state as save_identity_state,
     node_inventory as identity_node_inventory, summary as identity_summary,
@@ -42,6 +48,8 @@ def configuration(path: Path) -> dict:
         raise RegisterError("Configuration requires schema_version: 1.")
     if "intelligence" in cfg:
         validate_intelligence_config(cfg["intelligence"])
+    if "foundry" in cfg:
+        validate_foundry_config(cfg["foundry"])
     root = path.resolve().parent
     cfg["work_path"] = (root / cfg.get("work_dir", "work")).resolve()
     cfg["output_path"] = (root / cfg.get("output_dir", "out")).resolve()
@@ -70,11 +78,22 @@ def _render(state: dict, cfg: dict) -> dict:
         add_intelligence_excel_sheets(out / "model_register.xlsx", intel)
         export_intelligence_json(intel, out)
         intelligence_info = intelligence_summary(intel)
+    # Foundry is a read-only observation layer, distinct from organization decisions.
+    foundry_path = work / "foundry.json"
+    foundry_state = load_foundry_state(foundry_path) if foundry_path.exists() else None
+    foundry_info = None
+    if foundry_state is not None:
+        existing_links = load_identity_state(work / "identity.json")
+        observed_nodes = identity_node_inventory(load_intelligence_state(intel_path), state, foundry_state)
+        triage = foundry_screening(foundry_state, state, existing_links, observed_nodes)
+        add_foundry_excel_sheets(out / "model_register.xlsx", foundry_state, triage)
+        export_foundry_json(foundry_state, out)
+        foundry_info = foundry_summary(foundry_state)
     # Identity reconciliation is an additive reviewed layer, never a register mutation.
     identity_info = None
     identity_path = work / "identity.json"
-    if intel_path.exists() or identity_path.exists():
-        identity_nodes = identity_node_inventory(load_intelligence_state(intel_path), state)
+    if intel_path.exists() or identity_path.exists() or foundry_state is not None:
+        identity_nodes = identity_node_inventory(load_intelligence_state(intel_path), state, foundry_state)
         identity_state = load_identity_state(identity_path)
         add_identity_excel_sheets(out / "model_register.xlsx", identity_state, identity_nodes)
         export_identity_json(identity_state, identity_nodes, out)
@@ -98,6 +117,8 @@ def _render(state: dict, cfg: dict) -> dict:
         summary["intelligence"] = intelligence_info
     if identity_info is not None:
         summary["identity"] = identity_info
+    if foundry_info is not None:
+        summary["foundry"] = foundry_info
     atomic_json(out / "run_summary.json", summary)
     return summary
 
@@ -147,6 +168,9 @@ def parser() -> argparse.ArgumentParser:
     intelligence_review = sub.add_parser("intelligence-review", help="Acknowledge/reject candidate metadata; never approve a model")
     intelligence_review.add_argument("--file", type=Path, required=True)
     intelligence_review.add_argument("--reviewer", required=True)
+    sub.add_parser("foundry-refresh", help="Read configured Azure ARM/Foundry model deployments (GET only)")
+    sub.add_parser("foundry-status", help="Show saved Foundry deployment and source counts offline")
+    sub.add_parser("foundry-export", help="Export saved Foundry and identity worksheets offline")
     sub.add_parser("identity-status", help="Show model identity links, stale status and suggested matches; offline")
     sub.add_parser("identity-suggest", help="Generate conservative identity suggestions and review queue; offline")
     sub.add_parser("identity-export", help="Regenerate identity JSON and Excel views without network calls")
@@ -218,10 +242,33 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(_render(state, cfg), indent=2))
                 return 0
             state = load_state(state_path)
+            if args.command.startswith("foundry-"):
+                path = work / "foundry.json"
+                if args.command == "foundry-status":
+                    print(json.dumps(foundry_summary(load_foundry_state(path)), indent=2))
+                    return 0
+                if args.command == "foundry-export":
+                    print(json.dumps(_render(state, cfg), indent=2))
+                    return 0
+                if args.command == "foundry-refresh":
+                    outcomes = collect_foundry(cfg.get("foundry", {}))
+                    inventory, events = merge_foundry(load_foundry_state(path), outcomes)
+                    save_foundry_state(path, inventory)
+                    report = _render(state, cfg)
+                    report["foundry_refresh"] = {
+                        "sources_checked": len(outcomes), "events_created": len(events),
+                        "partial": [o["source_id"] for o in outcomes if o["status"] == "partial"],
+                        "unavailable": [o["source_id"] for o in outcomes if o["status"] == "unavailable"],
+                    }
+                    print(json.dumps(report, indent=2))
+                    return 2 if report["foundry_refresh"]["unavailable"] or report["foundry_refresh"]["partial"] else 0
             if args.command.startswith("identity-"):
                 identity_path = work / "identity.json"
                 links = load_identity_state(identity_path)
-                nodes = identity_node_inventory(load_intelligence_state(work / "intelligence.json"), state)
+                nodes = identity_node_inventory(
+                    load_intelligence_state(work / "intelligence.json"), state,
+                    load_foundry_state(work / "foundry.json")
+                    if (work / "foundry.json").exists() else None)
                 if args.command == "identity-status":
                     print(json.dumps(identity_summary(links, nodes), indent=2))
                     return 0
@@ -362,7 +409,7 @@ def main(argv: list[str] | None = None) -> int:
             save_state(state_path,state)
             print(json.dumps(_render(state,cfg),indent=2))
             return 0
-    except (RegisterError, CollectionError, DiscoveryError, ConfluenceError, OSError, ValueError) as exc:
+    except (RegisterError, CollectionError, DiscoveryError, ConfluenceError, FoundryError, OSError, ValueError) as exc:
         print(f"ERROR: {exc}",file=sys.stderr)
         return 1
 
